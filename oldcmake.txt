@@ -1,0 +1,47 @@
+cmake_minimum_required(VERSION 3.20)
+
+# "C" is added to LANGUAGES because your project includes sqlite3.c 
+project(atlas LANGUAGES CXX C)
+
+# 1. Standard Settings
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# 2. Find External Packages
+# This replaces the manual "include" and "link" sections for Torch[cite: 25, 35].
+# You must pass -DCMAKE_PREFIX_PATH="C:\libtorch" when running CMake.
+find_package(Torch REQUIRED)
+
+# 3. Define Sources
+# Instead of listing 200+ files manually, we find them automatically.
+# This picks up atlas.cpp, plus everything in src/ (including sqlite3.c)
+file(GLOB_RECURSE PROJ_SOURCES "src/*.cpp" "src/*.c" "src/*.h" "src/*.hpp" "atlas.cpp")
+
+# 4. Create Executable
+add_executable(atlas ${PROJ_SOURCES})
+
+# 5. Include Directories
+target_include_directories(atlas PRIVATE 
+    "src/include" # Includes Eigen, duckdb, etc. which are inside your src folder 
+)
+
+# 6. Linking
+# Link LibTorch (FindPackage handles all the complex includes/flags for you)
+target_link_libraries(atlas PRIVATE "${TORCH_LIBRARIES}")
+
+# Link Local DuckDB
+# We point to the "lib" folder where you said duckdb.lib resides
+target_link_directories(atlas PRIVATE "lib")
+target_link_libraries(atlas PRIVATE "duckdb") 
+
+# 7. Post-Build Commands (Copy DLLs)
+# This replicates the "xcopy" commands from your VS project [cite: 34]
+# using a cross-platform CMake command.
+add_custom_command(TARGET atlas POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+    "C:/libtorch/lib/torch.dll"
+    "C:/libtorch/lib/torch_cpu.dll"
+    "C:/libtorch/lib/c10.dll"
+    $<TARGET_FILE_DIR:atlas>
+    COMMENT "Copying LibTorch DLLs to output directory..."
+)
