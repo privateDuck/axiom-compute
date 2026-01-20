@@ -34,5 +34,5 @@ struct InputNode {
 
 
 int main() {
-	std::cout << "Helloc" << std::endl;
+	auto input = InputNode();
 }
