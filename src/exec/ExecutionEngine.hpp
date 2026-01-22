@@ -34,7 +34,7 @@ public:
         nodes.push_back({ std::move(node), {}, {} });
         nodes.back().out_count = 0;
 		// Initialize node if it has an init method
-        std::visit([&](auto& n) { n.init(id); }, nodes.back());
+        std::visit([&](auto& n) { n.init(id); }, nodes.back().node);
         sorted = false;
         return id;
     }
@@ -104,7 +104,7 @@ public:
     // Debug functions
 	void printExecutionOrder() const {
 		std::cout << "Execution Order: ";
-		for (NodeId id : executionOrder) {
+		for (const NodeId id : executionOrder) {
 			std::cout << id << " ";
 		}
 		std::cout << '\n';

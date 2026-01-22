@@ -29,13 +29,17 @@ endif()
 file(GLOB_RECURSE PROJ_SOURCES 
     "src/*.cpp" 
     "src/*.c" 
-    "src/*.h" 
-    "src/*.hpp" 
+    "src/*.h"
+        "src/*.cc"
+        "src/*.hh"
+        "src/*.hpp"
     "atlas.cpp"
 )
 
 # --- 4. TARGET ---
-add_executable(atlas ${PROJ_SOURCES})
+add_executable(atlas ${PROJ_SOURCES}
+        src/exec/ForwardExecutionEngine.h
+        src/exec/TrainNodes/TrainNodeBase.hpp)
 
 # --- 5. INCLUDES & LINKS ---
 # Include your local headers
