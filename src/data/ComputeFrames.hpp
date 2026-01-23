@@ -36,21 +36,23 @@ private:
 class ComputeFrame {
 public:
 	std::vector<ColumnMeta> columns;
-	EigenRowAlignedFloatMat X;
+	std::vector<EigenColDoubleVec> columns_data;
+	EigenColAlignedDoubleMat numX;
+	EigenColAlignedDoubleMat catX;
 	const ReferenceDataFrame* pRefDF;
 
-	ComputeFrame(uint64_t num_features, uint64_t cat_features, uint64_t rows)
+	void BuildFromReference(const ReferenceDataFrame* refDF)
 	{
-		EmbeddedOneWayFlatMap a;
-		uint64_t total_X_bytes = (num_features * rows + cat_features * rows) * sizeof(float);
-		uint64_t hash_maps = cat_features * sizeof(EmbeddedFlatMap<2048>);
-		uint64_t total_features = num_features + cat_features;
-		data_ptr = std::move(std::make_unique<uint8_t>(total_X_bytes + hash_maps));
-		float* dptr = reinterpret_cast<float*>(data_ptr.get());
-		X = Eigen::Map<EigenRowAlignedFloatMat>(dptr, rows, total_features);
+		pRefDF = refDF;
+		size_t all_elements = cols * rows;
+		data_ptr = std::move(std::make_unique<double>(all_elements));
+		auto* ptrNumX = data_ptr.get();
+		auto* ptrCatX = data_ptr.get() + num_features * rows;
+		numX = Eigen::Map<EigenColAlignedDoubleMat>(ptrNumX, rows, num_features);
+		catX = Eigen::Map<EigenColAlignedDoubleMat>(ptrCatX, rows, cat_features);
 	}
 private:
-	std::unique_ptr<uint8_t> data_ptr;
+	std::unique_ptr<double> data_ptr;
 };
 
 

@@ -3,11 +3,14 @@
 #include <arrow/api.h>
 #include <arrow/csv/api.h>
 #include <arrow/io/api.h>
+#include <arrow/compute/api.h>
 #include <string>
 #include <memory>
 #include <vector>
 #include <absl/container/flat_hash_map.h>
+
 #include "FastHash.hpp"
+#include "DataTypes.hpp"
 
 struct DataColumn {
 	std::string name;
@@ -32,18 +35,29 @@ private:
 public:
 	IMDataset() = default;
 	void ReadIntoFromFile(const std::string& filename);
-	const DataColumn& GetColumn(size_t index) const;
-	const DataColumn& GetColumn(const std::string& name) const;
-	const uint64_t size() const { return rows; }
+	[[nodiscard]] const DataColumn& GetColumn(size_t index) const {
+		return columns[index];
+	}
+	[[nodiscard]] const DataColumn& GetColumn(const std::string& name) const {
+		const auto idx = column_map.find(name);
+		if (idx == column_map.end()) {
+			throw std::runtime_error("No such column");
+		}
+		return columns[idx->second];
+	}
+	[[nodiscard]] uint64_t size() const { return rows; }
+	[[nodiscard]] const double* GetFlatDataPointer() const;
+	[[nodiscard]] const std::vector<DataColumn> GetNumericalColumns() const;
+	[[nodiscard]] const std::vector<DataColumn> GetCategoricalColumns() const;
 };
 
 
 class DataIngester {
 public:
-	DataIngester() = delete;
+	DataIngester() : memory_pool(arrow::default_memory_pool()){}
 
-	static std::shared_ptr<arrow::Table> GetArrowTableFromCSV(const std::string& file) {
-		arrow::io::IOContext io_context = arrow::io::default_io_context();
+	std::shared_ptr<arrow::Table> GetArrowTableFromCSV(const std::string& file) {
+		const arrow::io::IOContext& io_context = arrow::io::default_io_context();
 		auto input_res = arrow::io::ReadableFile::Open(file);
 		if (!input_res.ok()) {
 			throw std::runtime_error("Failed to Open File");
@@ -68,7 +82,7 @@ public:
 		if (!maybe_reader.ok()) {
 			throw std::runtime_error("Failed to read file");
 		}
-		std::shared_ptr<arrow::csv::TableReader> reader = *maybe_reader;
+		const std::shared_ptr<arrow::csv::TableReader>& reader = *maybe_reader;
 
 		auto table_res = reader->Read();
 		if (!table_res.ok()) {
@@ -83,10 +97,58 @@ public:
 		return *single_chunk_res;
 	}
 
-	static void CleanUpStringArray(std::shared_ptr<arrow::StringArray> array) {
+	InferredType GetInferredType(const std::shared_ptr<arrow::Array>& array) {
+		auto typeId = array->type_id();
+		switch (typeId) {
+			case arrow::Type::STRING:
+				// Check numeric
+				auto may_num_copy = RemoveNonNumericChars(array);
+				break;
+		}
+	}
+
+	void CleanUpStringArray(const std::shared_ptr<arrow::StringArray>& array) {
 		for (size_t i = 0; i < array->length(); i++)
 		{
 			std::string_view sv = array->GetView(i);
 		}
+	}
+private:
+	arrow::MemoryPool* memory_pool;
+
+	std::shared_ptr<arrow::Array> RemoveNonNumericChars(const std::shared_ptr<arrow::Array>& array) {
+		arrow::compute::ExecContext exec;
+		arrow::compute::ReplaceSubstringOptions replace_opts(
+			"[^0-9\\-eE.]", // Match anything that is NOT a number char
+			""
+		);
+
+		auto cleaned_result = arrow::compute::CallFunction("replace_substring_regex", { array }, &replace_opts, &exec);
+		if (!cleaned_result.ok()) {
+			return nullptr;
+		}
+
+		// May return empty strings
+		return cleaned_result->make_array();
+	}
+
+	std::shared_ptr<arrow::Array> RemoveNonDateTimeChars(const std::shared_ptr<arrow::Array>& array) {
+		arrow::compute::ExecContext exec;
+		arrow::compute::ReplaceSubstringOptions replace_opts(
+			"[^0-9\\-+TZ:.-]", // Match anything that is NOT a ISO8601 date time standard char
+			""
+		);
+
+		auto cleaned_result = arrow::compute::CallFunction("replace_substring_regex", { array }, &replace_opts, &exec);
+		if (!cleaned_result.ok()) {
+			return nullptr;
+		}
+
+		// May return empty strings
+		return cleaned_result->make_array();
+	}
+
+	bool TryParseAsNumeric(const std::shared_ptr<arrow::Array>& array) {
+
 	}
 };

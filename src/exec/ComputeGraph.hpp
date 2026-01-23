@@ -16,7 +16,6 @@ public:
     }
 private:
     std::vector<std::unique_ptr<TrainNodeBase>> dpl_nodes; // Data pipeline nodes
-    std::vector<std::unique_ptr<TrainModelNode>> model_nodes;
 };
 
 #endif //ATLAS_COMPUTEGRAPH_HPP
