@@ -2,6 +2,7 @@
 
 #include <Eigen/Eigen>
 
+using Scalar = float;
 using EigenRowAlignedDoubleMat = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor | Eigen::AutoAlign>;
 using EigenColAlignedDoubleMat = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::AutoAlign>;
 using EigenRowAlignedFloatMat = Eigen::Matrix<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor | Eigen::AutoAlign>;

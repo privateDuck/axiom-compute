@@ -39,7 +39,9 @@ file(GLOB_RECURSE PROJ_SOURCES
 # --- 4. TARGET ---
 add_executable(atlas ${PROJ_SOURCES}
         src/exec/ForwardExecutionEngine.h
-        src/exec/TrainNodes/TrainNodeBase.hpp)
+        src/exec/TrainNodes/TrainNodeBase.hpp
+        src/models/eigen_models/FeedForward.hpp
+        src/models/eigen_models/Losses.hpp)
 
 # --- 5. INCLUDES & LINKS ---
 # Include your local headers
