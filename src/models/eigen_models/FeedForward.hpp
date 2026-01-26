@@ -2,251 +2,498 @@
 // Created by Tharuka on 25/01/2026.
 //
 
-#ifndef ATLAS_FEEDFORWARD_HPP
-#define ATLAS_FEEDFORWARD_HPP
+//
+// Modular Neural Network Implementation with Eigen
+// Separated concerns: Model, Loss, Activation, Trainer, Regularization
+//
+
+#ifndef ATLAS_MODULAR_NN_HPP
+#define ATLAS_MODULAR_NN_HPP
 #pragma once
 
 #include <Eigen/Eigen>
 #include <Eigen/Dense>
 #include <vector>
-#include <algorithm>
-#include <cmath>
+#include <variant>
+#include <memory>
+#include <functional>
+#include <optional>
 #include "EigenDefinitions.hpp"
-#include "Losses.hpp"
 
 namespace EigenModels {
-    enum class Activation { None, ReLU, Sigmoid, Tanh, Softmax };
-    enum class LossType { MSE, MAE, CrossEntropy, Huber, MultiHinge, ZeroOne };
 
-    struct Math {
-        static MatrixR applyActivation(const MatrixR& z, const Activation act) {
-            switch (act) {
-                case Activation::ReLU: return z.cwiseMax(0);
-                case Activation::Sigmoid: return z.unaryExpr([](const Scalar x){ return 1.0f / (1.0f + std::exp(-x)); });
-                case Activation::Tanh: return z.unaryExpr([](const Scalar x){ return std::tanh(x); });
-                case Activation::Softmax: {
-                    // Stable Softmax applied row-wise (batch)
-                    MatrixR res = z;
-                    for (int i = 0; i < res.rows(); ++i) {
-                        Scalar maxVal = res.row(i).maxCoeff();
-                        res.row(i) = (res.row(i).array() - maxVal).exp();
-                        res.row(i) /= res.row(i).sum();
-                    }
-                    return res;
-                }
-                default: return z;
-            }
+// ============================================================================
+// ACTIVATION FUNCTIONS
+// ============================================================================
+
+struct ActivationResult {
+    MatrixR output;
+    MatrixR z_cache;  // Pre-activation (for backward pass)
+};
+
+struct ReLU {
+    [[nodiscard]] ActivationResult forward(const MatrixR& z) const {
+        return {z.cwiseMax(0), z};
+    }
+
+    [[nodiscard]] MatrixR backward(const MatrixR& z_cache, const MatrixR& grad_output) const {
+        return grad_output.cwiseProduct((z_cache.array() > 0).cast<Scalar>().matrix());
+    }
+};
+
+struct Sigmoid {
+    ActivationResult forward(const MatrixR& z) const {
+        MatrixR output = z.unaryExpr([](Scalar x) {
+            return 1.0f / (1.0f + std::exp(-x));
+        });
+        return {output, z};
+    }
+
+    MatrixR backward(const MatrixR& z_cache, const MatrixR& grad_output) const {
+        // sigmoid'(z) = sigmoid(z) * (1 - sigmoid(z))
+        MatrixR a = z_cache.unaryExpr([](const Scalar x) {
+            return 1.0f / (1.0f + std::exp(-x));
+        });
+        return grad_output.cwiseProduct((a.array() * (1 - a.array())).matrix());
+    }
+};
+
+struct Tanh {
+    [[nodiscard]] ActivationResult forward(const MatrixR& z) const {
+        MatrixR output = z.unaryExpr([](const Scalar x) { return std::tanh(x); });
+        return {output, z};
+    }
+
+    [[nodiscard]] MatrixR backward(const MatrixR& z_cache, const MatrixR& grad_output) const {
+        // tanh'(z) = 1 - tanh²(z)
+        MatrixR a = z_cache.unaryExpr([](const Scalar x) { return std::tanh(x); });
+        return grad_output.cwiseProduct((1 - a.array().square()).matrix());
+    }
+};
+
+struct Softmax {
+    [[nodiscard]] ActivationResult forward(const MatrixR& z) const {
+        MatrixR output = z;
+        for (int i = 0; i < output.rows(); ++i) {
+            Scalar maxVal = output.row(i).maxCoeff();
+            output.row(i) = (output.row(i).array() - maxVal).exp();
+            output.row(i) /= output.row(i).sum();
         }
+        return {output, z};
+    }
 
-        // Computes d(Activation)/d(Z) * d(Loss)/d(A)
-        // For element-wise activations, we compute d(Act)/d(Z) and multiply by error signal
-        static MatrixR applyDerivative(const MatrixR& z, const MatrixR& a, const MatrixR& upstreamGrad, Activation act) {
-            switch (act) {
-                case Activation::ReLU:
-                    return upstreamGrad.cwiseProduct((z.array() > 0).cast<Scalar>().matrix());
-                case Activation::Sigmoid:
-                    // sigmoid'(z) = a * (1 - a)
-                    // also possible : (upstreamGrad.array() * a.array() * (1 - a.array())).matrix();
-                    return upstreamGrad.cwiseProduct((a.array() * (1 - a.array())).matrix());
-                case Activation::Tanh:
-                    // tanh'(z) = 1 - a^2
-                    // (upstreamGrad.array() * (1 - a.array().square())).matrix();
-                    return upstreamGrad.cwiseProduct((1 - a.array().square()).matrix());
-                case Activation::Softmax:
-                    // Softmax derivative is complex (Jacobian).
-                    // Usually combined with CrossEntropy for simplification (Pred - Target).
-                    // If isolated, we handle it in the backward pass logic specifically.
-                    // return upstreamGrad;
-                default: return upstreamGrad;
-            }
+    // Note: Softmax gradient is complex (Jacobian matrix per sample)
+    // Usually combined with CrossEntropy for numerical stability
+    // For standalone use, this is a simplified version
+    [[nodiscard]] MatrixR backward(const MatrixR& z_cache, const MatrixR& grad_output) const {
+        MatrixR a = forward(z_cache).output;
+        MatrixR grad = MatrixR::Zero(grad_output.rows(), grad_output.cols());
+
+        for (int i = 0; i < a.rows(); ++i) {
+            // Jacobian: diag(a) - a * a^T
+            EVector ai = a.row(i).transpose();
+            MatrixC jacobian = ai.asDiagonal() - ai * ai.transpose();
+            grad.row(i) = (jacobian * grad_output.row(i).transpose()).transpose();
         }
-    };
+        return grad;
+    }
+};
 
-    struct Layer {
-        MatrixC weights;
-        EVector biases;
-        MatrixC weightsGrad;
-        EVector biasesGrad;
+struct Linear {
+    ActivationResult forward(const MatrixR& z) const {
+        return {z, z};
+    }
 
-        // Cache for backprop
-        MatrixR z_cache; // Pre-activation
-        MatrixR a_cache; // Post-activation
-        Activation activation;
+    MatrixR backward(const MatrixR& z_cache, const MatrixR& grad_output) const {
+        return grad_output;
+    }
+};
 
-        Layer(const int inSize, const int outSize, const Activation act) : activation(act) {
-            // TODO: Proper Xavier/Glorot Initialization
-            const Scalar limit = std::sqrt(6.0f / static_cast<float>(inSize + outSize));
-            weights = MatrixR::Random(inSize, outSize) * limit;
-            biases = EVector::Zero(outSize);
-        }
-    };
+using ActivationFunc = std::variant<ReLU, Sigmoid, Tanh, Softmax, Linear>;
 
+// ============================================================================
+// REGULARIZATION
+// ============================================================================
 
-    class FeedForwardNN {
-    public:
-        FeedForwardNN(const std::vector<uint32_t>& topology, const Activation activation, const LossType loss) {
+struct RegularizationResult {
+    Scalar penalty;           // Regularization penalty to add to loss
+    MatrixC weight_gradient;  // Gradient to add to weight gradients
+};
 
-        }
+struct NoRegularization {
+    RegularizationResult compute(const MatrixC& weights) const {
+        return {0.0f, MatrixC::Zero(weights.rows(), weights.cols())};
+    }
+};
 
-        void addLayer(int inSize, int outSize, Activation act) {
-            layers.emplace_back(inSize, outSize, act);
-        }
+struct L2Regularization {
+    Scalar lambda;  // Regularization strength
 
-        MatrixR forward(const MatrixR& input) {
-            MatrixR curr = input;
+    explicit L2Regularization(Scalar l = 0.01f) : lambda(l) {}
 
-            for (auto& layer : layers) {
-                layer.z_cache = (curr * layer.weights).rowwise() + layer.biases.transpose();
-                layer.a_cache = Math::applyActivation(layer.z_cache, layer.activation);
-                curr = layer.a_cache;
-            }
-            return curr;
-        }
+    RegularizationResult compute(const MatrixC& weights) const {
+        // L2 penalty: λ/2 * ||W||²
+        Scalar penalty = 0.5f * lambda * weights.array().square().sum();
 
-        [[nodiscard]] Scalar computeLoss(const MatrixR& predictions, const MatrixR& targets, const LossType lossType) const {
+        // L2 gradient: λ * W
+        MatrixC gradient = lambda * weights;
+
+        return {penalty, gradient};
+    }
+};
+
+struct L1Regularization {
+    Scalar lambda;  // Regularization strength
+
+    explicit L1Regularization(Scalar l = 0.01f) : lambda(l) {}
+
+    RegularizationResult compute(const MatrixC& weights) const {
+        // L1 penalty: λ * ||W||₁
+        Scalar penalty = lambda * weights.array().abs().sum();
+
+        // L1 gradient: λ * sign(W)
+        MatrixC gradient = lambda * weights.array().sign().matrix();
+
+        return {penalty, gradient};
+    }
+};
+
+struct ElasticNetRegularization {
+    Scalar l1_lambda;  // L1 regularization strength
+    Scalar l2_lambda;  // L2 regularization strength
+
+    explicit ElasticNetRegularization(Scalar l1 = 0.01f, Scalar l2 = 0.01f)
+        : l1_lambda(l1), l2_lambda(l2) {}
+
+    RegularizationResult compute(const MatrixC& weights) const {
+        // Elastic Net: α * L1 + (1-α) * L2
+        // We use explicit l1_lambda and l2_lambda for more control
+
+        Scalar l1_penalty = l1_lambda * weights.array().abs().sum();
+        Scalar l2_penalty = 0.5f * l2_lambda * weights.array().square().sum();
+
+        MatrixC l1_grad = l1_lambda * weights.array().sign().matrix();
+        MatrixC l2_grad = l2_lambda * weights;
+
+        return {l1_penalty + l2_penalty, l1_grad + l2_grad};
+    }
+};
+
+using RegularizationFunc = std::variant<NoRegularization, L1Regularization, L2Regularization, ElasticNetRegularization>;
+
+// ============================================================================
+// LOSS FUNCTIONS
+// ============================================================================
+
+struct LossResult {
+    Scalar value;
+    MatrixR gradient;  // Gradient w.r.t predictions
+};
+
+struct MSELoss {
+    LossResult forward(const MatrixR& predictions, const MatrixR& targets) const {
         MatrixR diff = predictions - targets;
-        const auto n = static_cast<float>(predictions.rows()); // Batch size
+        Scalar n = static_cast<Scalar>(predictions.rows());
+        Scalar loss = diff.array().square().sum() / n;
+        MatrixR grad = (2.0f / n) * diff;
+        return {loss, grad};
+    }
+};
 
-        switch (lossType) {
-            case LossType::MSE:
-                return diff.array().square().sum() / n;
-            case LossType::MAE:
-                return diff.array().abs().sum() / n;
-            case LossType::Huber: {
-                Scalar loss = 0;
-                for(int i=0; i<diff.size(); ++i) {
-                    const Scalar absErr = std::abs(diff(i));
-                    loss += (absErr <= huberDelta) ? 0.5f * absErr * absErr : huberDelta * (absErr - 0.5f * huberDelta);
-                }
-                return loss / n;
-            }
-            case LossType::CrossEntropy: {
-                // assumes Softmax was applied. CE = -sum(y_true * log(y_pred))
-                // Add epsilon for stability
-                MatrixR safePred = predictions.cwiseMax(1e-7).cwiseMin(1.0f - 1e-7);
-                return -(targets.array() * safePred.array().log()).sum() / n;
-            }
-            case LossType::ZeroOne: {
-                 // Not differentiable, purely metric.
-                 Scalar errors = 0;
-                 for(int i=0; i<n; ++i) {
-                     int predIdx, targetIdx;
-                     predictions.row(i).maxCoeff(&predIdx);
-                     targets.row(i).maxCoeff(&targetIdx);
-                     if(predIdx != targetIdx) errors++;
-                 }
-                 return errors / n;
-            }
-            case LossType::MultiHinge: {
-                // L = sum(max(0, 1 + y_wrong - y_correct))
-                Scalar totalLoss = 0;
-                for (int i = 0; i<n; ++i) {
-                    int correctClass;
-                    targets.row(i).maxCoeff(&correctClass); // Assuming one-hot targets
-                    const Scalar correctScore = predictions(i, correctClass);
+struct MAELoss {
+    LossResult forward(const MatrixR& predictions, const MatrixR& targets) const {
+        MatrixR diff = predictions - targets;
+        Scalar n = static_cast<Scalar>(predictions.rows());
+        Scalar loss = diff.array().abs().sum() / n;
+        MatrixR grad = diff.array().sign().matrix() / n;
+        return {loss, grad};
+    }
+};
 
-                    for (int j = 0; j<predictions.cols(); ++j) {
-                        if (j == correctClass) continue;
-                        totalLoss += std::max(0.0f, hingeMargin - correctScore + predictions(i, j));
-                    }
-                }
-                return totalLoss / n;
+struct CrossEntropyLoss {
+    // Works with Softmax output (probabilities)
+    // Targets should be one-hot encoded
+    LossResult forward(const MatrixR& predictions, const MatrixR& targets) const {
+        Scalar n = static_cast<Scalar>(predictions.rows());
+
+        // Clip predictions for numerical stability
+        MatrixR safe_pred = predictions.cwiseMax(1e-7f).cwiseMin(1.0f - 1e-7f);
+
+        // Loss: -sum(y_true * log(y_pred)) / n
+        Scalar loss = -(targets.array() * safe_pred.array().log()).sum() / n;
+
+        // Gradient: (y_pred - y_true) / n
+        // This is the combined gradient of Softmax + CrossEntropy
+        MatrixR grad = (predictions - targets) / n;
+
+        return {loss, grad};
+    }
+};
+
+struct HuberLoss {
+    Scalar delta = 1.0f;
+
+    explicit HuberLoss(Scalar d = 1.0f) : delta(d) {}
+
+    LossResult forward(const MatrixR& predictions, const MatrixR& targets) const {
+        MatrixR diff = predictions - targets;
+        Scalar n = static_cast<Scalar>(predictions.rows());
+
+        Scalar loss = 0;
+        MatrixR grad = MatrixR::Zero(diff.rows(), diff.cols());
+
+        for (int i = 0; i < diff.size(); ++i) {
+            Scalar abs_err = std::abs(diff(i));
+            if (abs_err <= delta) {
+                loss += 0.5f * abs_err * abs_err;
+                grad(i) = diff(i);
+            } else {
+                loss += delta * (abs_err - 0.5f * delta);
+                grad(i) = delta * (diff(i) > 0 ? 1.0f : -1.0f);
             }
-            default: return 0.0f;
+        }
+
+        return {loss / n, grad / n};
+    }
+};
+
+struct MultiHingeLoss {
+    Scalar margin = 1.0f;
+
+    explicit MultiHingeLoss(Scalar m = 1.0f) : margin(m) {}
+
+    LossResult forward(const MatrixR& predictions, const MatrixR& targets) const {
+        const Scalar n = static_cast<Scalar>(predictions.rows());
+        Scalar total_loss = 0;
+        MatrixR grad = MatrixR::Zero(predictions.rows(), predictions.cols());
+
+        for (int i = 0; i < n; ++i) {
+            int correct_class;
+            targets.row(i).maxCoeff(&correct_class);
+            Scalar correct_score = predictions(i, correct_class);
+            int violation_count = 0;
+
+            for (int j = 0; j < predictions.cols(); ++j) {
+                if (j == correct_class) continue;
+
+                const Scalar loss_ij = margin - correct_score + predictions(i, j);
+                if (loss_ij > 0) {
+                    total_loss += loss_ij;
+                    grad(i, j) = 1.0f;
+                    violation_count++;
+                }
+            }
+
+            grad(i, correct_class) = -static_cast<Scalar>(violation_count);
+        }
+
+        return {total_loss / n, grad / n};
+    }
+};
+
+struct ZeroOneLoss {
+    // Non-differentiable, for evaluation only
+    LossResult forward(const MatrixR& predictions, const MatrixR& targets) const {
+        const Scalar n = static_cast<Scalar>(predictions.rows());
+        Scalar errors = 0;
+
+        for (int i = 0; i < n; ++i) {
+            int pred_idx, target_idx;
+            predictions.row(i).maxCoeff(&pred_idx);
+            targets.row(i).maxCoeff(&target_idx);
+            if (pred_idx != target_idx) errors++;
+        }
+
+        // Zero gradient (not trainable)
+        return {errors / n, MatrixR::Zero(predictions.rows(), predictions.cols())};
+    }
+};
+
+using LossFunc = std::variant<MSELoss, MAELoss, CrossEntropyLoss, HuberLoss, MultiHingeLoss, ZeroOneLoss>;
+
+// ============================================================================
+// LAYER DEFINITION
+// ============================================================================
+
+struct Layer {
+    MatrixC weights;
+    EVector biases;
+
+    // Gradients (computed during backward pass)
+    MatrixC weight_grad;
+    EVector bias_grad;
+
+    // Caches for backpropagation
+    MatrixR z_cache;       // Pre-activation
+    MatrixR a_cache;       // Post-activation
+    MatrixR input_cache;   // Input to this layer
+
+    ActivationFunc activation;
+    RegularizationFunc regularization;
+
+    Layer(int in_size, int out_size, ActivationFunc act, RegularizationFunc reg = NoRegularization{})
+        : activation(act), regularization(reg) {
+        // Xavier/Glorot initialization
+        const Scalar limit = std::sqrt(6.0f / static_cast<Scalar>(in_size + out_size));
+        weights = MatrixR::Random(in_size, out_size) * limit;
+        biases = EVector::Zero(out_size);
+    }
+
+    MatrixR forward(const MatrixR& input) {
+        input_cache = input;
+        z_cache = (input * weights).rowwise() + biases.transpose();
+
+        ActivationResult act_result = std::visit(
+            [&](const auto& act) { return act.forward(z_cache); },
+            activation
+        );
+
+        a_cache = act_result.output;
+        return a_cache;
+    }
+
+    MatrixR backward(const MatrixR& grad_output) {
+        // Compute gradient w.r.t. pre-activation
+        MatrixR grad_z = std::visit(
+            [&](const auto& act) { return act.backward(z_cache, grad_output); },
+            activation
+        );
+
+        // Compute gradients for weights and biases
+        weight_grad = input_cache.transpose() * grad_z;
+        bias_grad = grad_z.colwise().sum();
+
+        // Add regularization gradient to weight gradients
+        RegularizationResult reg_result = std::visit(
+            [&](const auto& reg) { return reg.compute(weights); },
+            regularization
+        );
+        weight_grad += reg_result.weight_gradient;
+
+        // Compute gradient w.r.t. input (for previous layer)
+        return grad_z * weights.transpose();
+    }
+
+    // Compute regularization penalty for this layer
+    Scalar getRegularizationPenalty() const {
+        return std::visit(
+            [&](const auto& reg) { return reg.compute(weights).penalty; },
+            regularization
+        );
+    }
+};
+
+// ============================================================================
+// MODEL (Just holds architecture and parameters)
+// ============================================================================
+
+class FeedForwardNN {
+public:
+    FeedForwardNN() = default;
+
+    void addLayer(int in_size, int out_size, ActivationFunc activation,
+                  RegularizationFunc regularization = NoRegularization{}) {
+        layers.emplace_back(in_size, out_size, std::move(activation), std::move(regularization));
+    }
+
+    MatrixR forward(const MatrixR& input) {
+        MatrixR curr = input;
+        for (auto& layer : layers) {
+            curr = layer.forward(curr);
+        }
+        return curr;
+    }
+
+    void backward(const MatrixR& grad_output) {
+        MatrixR grad = grad_output;
+        for (int i = static_cast<int>(layers.size()) - 1; i >= 0; --i) {
+            grad = layers[i].backward(grad);
         }
     }
 
-    void backward(const MatrixR& input, const MatrixR& predictions, const MatrixR& targets, const LossType lossType) {
-        const auto n = static_cast<float>(input.rows());
-        MatrixR grad; // Gradient of Loss w.r.t the output of the current layer (dL/dA) or (dL/dZ)
-
-        // 1. Compute Gradient at Output Layer
-        // We calculate dL/dZ (gradient w.r.t pre-activation) directly for efficiency/stability where possible
-
-        const bool outputIsSoftmax = (!layers.empty() && layers.back().activation == Activation::Softmax);
-
-        if (lossType == LossType::MSE) {
-             // dL/dA = 2/n * (Pred - Target)
-             // dL/dZ = dL/dA * Act'(Z)
-             const MatrixR dL_dA = (2.0f / n) * (predictions - targets);
-             grad = Math::applyDerivative(layers.back().z_cache, layers.back().a_cache, dL_dA, layers.back().activation);
+    // Compute total regularization penalty across all layers
+    Scalar getRegularizationPenalty() const {
+        Scalar total = 0.0f;
+        for (const auto& layer : layers) {
+            total += layer.getRegularizationPenalty();
         }
-        else if (lossType == LossType::CrossEntropy && outputIsSoftmax) {
-            // Softmax + CrossEntropy combination simplifies to (Pred - Target) / n
-            grad = (predictions - targets) / n;
-        }
-        else if (lossType == LossType::MAE) {
-            const MatrixR sign = (predictions - targets).array().sign();
-            const MatrixR dL_dA = sign / n;
-            grad = Math::applyDerivative(layers.back().z_cache, layers.back().a_cache, dL_dA, layers.back().activation);
-        }
-        else if (lossType == LossType::Huber) {
-            MatrixR diff = predictions - targets;
-            MatrixR dL_dA = diff;
-            for(int i=0; i<diff.size(); ++i) {
-                if (std::abs(diff(i)) <= huberDelta) dL_dA(i) = diff(i);
-                else dL_dA(i) = (diff(i) > 0 ? huberDelta : -huberDelta);
-            }
-            dL_dA /= n;
-            grad = Math::applyDerivative(layers.back().z_cache, layers.back().a_cache, dL_dA, layers.back().activation);
-        }
-        else if (lossType == LossType::MultiHinge) {
-            grad = MatrixR::Zero(predictions.rows(), predictions.cols());
-            for (int i=0; i<n; ++i) {
-                int correctClass;
-                targets.row(i).maxCoeff(&correctClass);
-                const Scalar correctScore = predictions(i, correctClass);
-                int wrongCounts = 0;
-
-                for(int j=0; j<predictions.cols(); ++j) {
-                    if (j == correctClass) continue;
-                    if (hingeMargin - correctScore + predictions(i, j) > 0) {
-                        grad(i, j) = 1.0f / n;
-                        wrongCounts++;
-                    }
-                }
-                grad(i, correctClass) = -1.0f * static_cast<float>(wrongCounts) / n;
-            }
-            // If output is not linear, apply chain rule through activation
-             if (layers.back().activation != Activation::None) {
-                 grad = Math::applyDerivative(layers.back().z_cache, layers.back().a_cache, grad, layers.back().activation);
-             }
-        }
-        else if (lossType == LossType::ZeroOne) {
-            // ZeroOne loss cannot be trained (gradient is 0 everywhere)
-            return;
-        }
-
-        // 2. Backpropagate through layers
-        for (int32_t i = static_cast<int32_t>(layers.size()) - 1; i >= 0; --i) {
-            Layer& layer = layers[i];
-
-            // Input to this layer (A_prev)
-            const MatrixR& a_prev = (i == 0) ? input : layers[i-1].a_cache;
-
-            // Gradients for Weights and Biases
-            // dL/dW = A_prev^T * dL/dZ
-            layer.weightsGrad = a_prev.transpose() * grad;
-
-            // dL/dB = sum(dL/dZ) across batch
-            layer.biasesGrad = grad.colwise().sum();
-
-            // Propagate Gradient to previous layer (dL/dA_prev)
-            // dL/dA_prev = dL/dZ * W^T
-            if (i > 0) {
-                MatrixR dL_dA_prev = grad * layer.weights.transpose();
-                grad = Math::applyDerivative(layers[i-1].z_cache, layers[i-1].a_cache, dL_dA_prev, layers[i-1].activation);
-            }
-        }
+        return total;
     }
 
     std::vector<Layer>& getLayers() { return layers; }
+    const std::vector<Layer>& getLayers() const { return layers; }
 
-    private:
-        std::vector<Layer> layers;
-        Scalar huberDelta = 1.0f; // Configurable for Huber loss
-        Scalar hingeMargin = 1.0f; // Configurable for Hinge loss
-    };
+    // Zero out all gradients
+    void zeroGrad() {
+        for (auto& layer : layers) {
+            layer.weight_grad.setZero();
+            layer.bias_grad.setZero();
+        }
+    }
 
-}
-#endif //ATLAS_FEEDFORWARD_HPP
+private:
+    std::vector<Layer> layers;
+};
+
+// ============================================================================
+// TRAINER (Orchestrates training loop)
+// ============================================================================
+
+class Trainer {
+public:
+    Trainer(FeedForwardNN& model, LossFunc loss_fn)
+        : model_(model), loss_fn_(std::move(loss_fn)) {}
+
+    // Single training step
+    // Returns: {data_loss, regularization_penalty, total_loss}
+    std::tuple<Scalar, Scalar, Scalar> trainStep(const MatrixR& input, const MatrixR& targets) {
+        // Forward pass
+        MatrixR predictions = model_.forward(input);
+
+        // Compute loss and its gradient
+        LossResult loss_result = std::visit(
+            [&](const auto& loss) { return loss.forward(predictions, targets); },
+            loss_fn_
+        );
+
+        // Get regularization penalty
+        Scalar reg_penalty = model_.getRegularizationPenalty();
+
+        // Total loss = data loss + regularization penalty
+        Scalar total_loss = loss_result.value + reg_penalty;
+
+        // Backward pass (regularization gradients are added automatically in Layer::backward)
+        model_.backward(loss_result.gradient);
+
+        return {loss_result.value, reg_penalty, total_loss};
+    }
+
+    // Evaluation (no gradient computation needed in model)
+    // Returns: {data_loss, regularization_penalty, total_loss}
+    std::tuple<Scalar, Scalar, Scalar> evaluate(const MatrixR& input, const MatrixR& targets) {
+        MatrixR predictions = model_.forward(input);
+
+        LossResult loss_result = std::visit(
+            [&](const auto& loss) { return loss.forward(predictions, targets); },
+            loss_fn_
+        );
+
+        Scalar reg_penalty = model_.getRegularizationPenalty();
+        Scalar total_loss = loss_result.value + reg_penalty;
+
+        return {loss_result.value, reg_penalty, total_loss};
+    }
+
+    // Get predictions without computing loss
+    MatrixR predict(const MatrixR& input) {
+        return model_.forward(input);
+    }
+
+private:
+    FeedForwardNN& model_;
+    LossFunc loss_fn_;
+};
+
+} // namespace EigenModels
+
+#endif // ATLAS_MODULAR_NN_HPP

@@ -14,9 +14,6 @@
 #include "EigenDefinitions.hpp"
 
 namespace EigenModels {
-    using MatrixR = EigenRowAlignedFloatMat;
-    using MatrixC = EigenColAlignedFloatMat;
-    using EVector = EigenColFloatVec;
 
     struct MSE {
         // 1. Cost (Scalar)

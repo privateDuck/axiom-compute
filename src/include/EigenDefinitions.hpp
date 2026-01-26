@@ -12,3 +12,8 @@ using EigenRowDoubleVec = Eigen::Matrix<double, 1, Eigen::Dynamic, Eigen::RowMaj
 using EigenColDoubleVec = Eigen::Matrix<double, Eigen::Dynamic, 1, Eigen::AutoAlign>;
 using EigenRowFloatVec = Eigen::Matrix<float, 1, Eigen::Dynamic, Eigen::RowMajor | Eigen::AutoAlign>;
 using EigenColFloatVec = Eigen::Matrix<float, Eigen::Dynamic, 1, Eigen::AutoAlign>;
+
+
+using MatrixR = EigenRowAlignedFloatMat;
+using MatrixC = EigenColAlignedFloatMat;
+using EVector = EigenColFloatVec;
