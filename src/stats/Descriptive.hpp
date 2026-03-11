@@ -1,11 +1,12 @@
 #pragma once
 
 #include "Common.hpp"
+#include <vector>
 
 namespace stats {
 
     template<typename T>
-    [[nodiscard]] double mean(std::span<T> data) {
+    [[nodiscard]] inline double mean(std::span<T> data) {
         if (data.size() == 0) return 0.0; // Empty
 
         double sum = 0.0;
@@ -17,7 +18,7 @@ namespace stats {
     }
 
     template<typename T>
-    [[nodiscard]] auto variance(std::span<T> data, Scope scope = Scope::Sample) {
+    [[nodiscard]] inline auto variance(std::span<T> data, Scope scope = Scope::Sample) {
         double mu = mean(data);
         double sum = 0.0;
         for (const auto x : data) {
@@ -29,7 +30,7 @@ namespace stats {
         return sum / denom;
     }
 
-    double mean(const double* data, size_t n) {
+    inline double mean(const double* data, size_t n) {
         double mu = 0.0;
         for (size_t i = 0; i < n; ++i) {
             mu += data[i];
@@ -37,7 +38,7 @@ namespace stats {
         return mu /= static_cast<double>(n);
     }
 
-    double variance(const double* data, size_t n, Scope scope = Scope::Sample) {
+   inline double variance(const double* data, size_t n, Scope scope = Scope::Sample) {
         double mu = 0.0;
         for (size_t i = 0; i < n; ++i) {
             mu += data[i];
@@ -54,7 +55,7 @@ namespace stats {
         return sum / denom;
     }
 
-    double stddev(const double* data, size_t n, Scope scope = Scope::Sample) {
+    inline double stddev(const double* data, size_t n, Scope scope = Scope::Sample) {
         double mu = 0.0;
         for (size_t i = 0; i < n; ++i) {
             mu += data[i];
@@ -71,7 +72,7 @@ namespace stats {
         return std::sqrt(sum / denom);
     }
 
-    void var_and_stddev(const double* data, size_t n, double& var_out, double& std_out, Scope scope = Scope::Sample) {
+    inline void var_and_stddev(const double* data, size_t n, double& var_out, double& std_out, Scope scope = Scope::Sample) {
         double mu = 0.0;
         for (size_t i = 0; i < n; ++i) {
             mu += data[i];
@@ -89,7 +90,7 @@ namespace stats {
         std_out = std::sqrt(var_out);
     }
 
-    void quantiles(const double* data, size_t n, double& q1, double& q2, double& q3) {
+    inline void quantiles(const double* data, size_t n, double& q1, double& q2, double& q3) {
         std::vector<double> cpy(data, data + n);
         //std::memcpy(cpy.data(), data, sizeof(double) * n);
         std::sort(cpy.begin(), cpy.end());
@@ -101,7 +102,7 @@ namespace stats {
         q3 = cpy[q3n];
     }
 
-    double skewness(const double* data, size_t n) {
+    inline double skewness(const double* data, size_t n) {
 
         double m = data[0];
         double s2m = 0.0;
@@ -109,8 +110,8 @@ namespace stats {
 
         for (size_t i = 1; i < n; i++)
         {
-            double nc = static_cast<double>(i);
-            double recipN = 1.0 / nc;
+            auto nc = static_cast<double>(i);
+            const double recipN = 1.0 / nc;
 
             double delta = data[i] - m;
             m += delta * recipN;
@@ -123,7 +124,7 @@ namespace stats {
         return std::sqrt(static_cast<double>(n) * (n - 1.0)) * s3m / ((n - 2.0) * std::pow(s2m, 1.5));
     }
 
-    double kurtosis(const double* data, size_t n) {
+    inline double kurtosis(const double* data, size_t n) {
         double mean = 0.0;
         double m2 = 0.0;
         double m3 = 0.0;
@@ -131,7 +132,7 @@ namespace stats {
 
         for (size_t i = 1; i < n; i++)
         {
-            double nc = static_cast<double>(i);
+            auto nc = static_cast<double>(i);
             double n1 = nc - 1.0;
             double recipN = 1.0 / nc;
 
@@ -148,8 +149,8 @@ namespace stats {
         return (n * m4 / (m2 * m2)) - 3.0;
     }
 
-    double standard_error(const double* data, size_t n) {
-        double var = variance(data, n);
+    inline double standard_error(const double* data, size_t n) {
+        const double var = variance(data, n);
         return std::sqrt(var / n);
     }
 }

@@ -375,7 +375,7 @@ struct Layer {
     }
 
     // Compute regularization penalty for this layer
-    Scalar getRegularizationPenalty() const {
+    [[nodiscard]] Scalar getRegularizationPenalty() const {
         return std::visit(
             [&](const auto& reg) { return reg.compute(weights).penalty; },
             regularization

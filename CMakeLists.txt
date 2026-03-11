@@ -24,11 +24,14 @@ if(NOT MSVC_TOOLSET_VERSION)
     endif()
 endif()
 
+
+#add_subdirectory()
+
 # --- 3. SOURCES ---
 # Automatically find all sources in 'src' and root
-file(GLOB_RECURSE PROJ_SOURCES 
-    "src/*.cpp" 
-    "src/*.c" 
+file(GLOB_RECURSE PROJ_SOURCES
+    "src/*.cpp"
+    "src/*.c"
     "src/*.h"
         "src/*.cc"
         "src/*.hh"
@@ -38,14 +41,22 @@ file(GLOB_RECURSE PROJ_SOURCES
 
 # --- 4. TARGET ---
 add_executable(atlas ${PROJ_SOURCES}
-        src/exec/ForwardExecutionEngine.h
-        src/exec/TrainNodes/TrainNodeBase.hpp
-        src/models/eigen_models/FeedForward.hpp
-        src/models/eigen_models/Losses.hpp)
+    atlas.cpp
+)
+
+
+add_library(antlr4_static STATIC IMPORTED)
+set_target_properties(antlr4_static PROPERTIES
+        IMPORTED_LOCATION_DEBUG   "C:/antlr/lib/x64_debug/antlr4-runtime.lib"
+        IMPORTED_LOCATION_RELEASE "C:/antlr/lib/x64/antlr4-runtime.lib"
+)
+
+target_link_libraries(atlas PRIVATE antlr4_static)
 
 # --- 5. INCLUDES & LINKS ---
 # Include your local headers
 target_include_directories(atlas PRIVATE "src/include")
+target_include_directories(atlas PRIVATE "src/include/antlr")
 
 # Link LibTorch (Includes all headers/flags automatically)
 target_link_libraries(atlas PRIVATE "${TORCH_LIBRARIES}")

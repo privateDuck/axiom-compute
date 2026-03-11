@@ -1,0 +1,101 @@
+grammar fluxpp;
+
+program: flux | single;
+
+flux: statement* EOF;
+single: expr EOF;
+
+statement: expression_statement | labeled_statement;
+
+expression_statement: expr ENDLINE;
+assignment: ID '=' expr ENDLINE;
+labeled_statement:
+	create
+	| filter
+	| drop_row
+	| drop_col
+	| clamp
+	| set
+	| rename
+	| fill
+	| assert;
+
+create: CREATE ID AS expr ENDLINE;
+filter: KEEP IF expr ENDLINE;
+drop_row: DROP IF expr ENDLINE;
+drop_col: REMOVE ID (',' ID)* ENDLINE;
+clamp: CLAMP ID FROM expr TO expr ENDLINE;
+set: SET ID '=' expr ENDLINE;
+rename: RENAME ID TO ID ENDLINE;
+fill: FILL ID WITH expr ENDLINE;
+assert: ASSERT expr ENDLINE;
+
+expr:
+	'(' expr ')'												# Parens
+	| '|' expr '|'												# Abs
+	| '-' expr													# Negate
+	| NOT expr													# LogicalNot
+	| function = ID '(' args ')'								# FunctionCall
+	| <assoc = right>left = expr op = '^' right = expr			# Exponentiation
+	| <assoc = left>left = expr op = ('*' | '/') right = expr	# Multiplicative
+	| <assoc = left>left = expr op = ('+' | '-') right = expr	# Additive
+	| <assoc = left>left = expr op = (
+		'=='
+		| '!='
+		| '<'
+		| '>'
+		| '<='
+		| '>='
+	) right = expr # Comparison
+	| left = expr opleft = ('<' | '<=') middle = expr opright = (
+		'<'
+		| '<='
+	) right = expr # ChainedComparisonAscending // 1 < x <= 10
+	| left = expr opleft = ('>' | '>=') middle = expr opright = (
+		'>'
+		| '>='
+	) right = expr												# ChainedComparisonDescending // 10 > x >= 1
+	| <assoc = left>left = expr op = (AND | OR) right = expr	# Logical
+	| ID														# Identifier
+	| NUMBER													# Number
+	| STRING_LITERAL											# StringLiteral
+	| TRUE														# TrueLiteral
+	| FALSE														# FalseLiteral;
+
+args: (expr (',' expr)*)?;
+
+// Keywords
+AS: 'as';
+AND: 'and';
+ELSE: 'else';
+DROP: 'drop';
+CREATE: 'create';
+KEEP: 'keep';
+REMOVE: 'remove';
+CLAMP: 'clamp';
+SET: 'set';
+RENAME: 'rename';
+CAST: 'cast';
+FILL: 'fill';
+ASSERT: 'assert';
+WITH: 'with';
+OR: 'or';
+NOT: 'not';
+IF: 'if';
+FROM: 'from';
+TO: 'to';
+
+TRUE: 'true';
+FALSE: 'false';
+
+STRING_LITERAL: UNTERMINATED_STRING_LITERAL '"';
+UNTERMINATED_STRING_LITERAL: '"' (~["\\\r\n] | '\\' (. | EOF))*;
+
+ID: [a-zA-Z_] [a-zA-Z_0-9]*;
+NUMBER: [0-9]+ ('.' [0-9]+)?;
+
+ENDLINE: ';';
+NEWLINE: ('\r' '\n'? | '\n') -> channel(HIDDEN);
+WS: [ \t]+ -> channel(HIDDEN);
+BLOCK_COMMENT: '/*' .*? '*/' -> channel(HIDDEN);
+LINE_COMMENT: '//' ~[\r\n]* -> channel(HIDDEN);
