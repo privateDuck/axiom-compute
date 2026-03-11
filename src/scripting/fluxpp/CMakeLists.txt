@@ -1,46 +1,11 @@
-# This subproject needs ANTLR4, but the rest of the project doesn't have to know about it!
-find_package(antlr4-runtime CONFIG REQUIRED)
-
-# Create a test executable for this specific subproject
-add_executable(TestParser 
-    main_test.cpp 
-    fluxppLexer.cpp 
-    fluxppParser.cpp
-    fluxppBaseListener.cpp
-    fluxppBaseVisitor.cpp
-    fluxppListener.cpp
-    fluxppVisitor.cpp
-    functions.cpp
-    diagnostic/diagnostic_impl.cpp
-)
-
-# 1. Link our internal shared headers
-# 2. Link the external ANTLR static library
-target_link_libraries(TestParser 
-    PRIVATE 
-    CoreHeaders 
-    antlr4_static
-)
-
-# Turn off the ANTLR DLL import logic just for this target
-target_compile_definitions(TestParser PRIVATE ANTLR4CPP_STATIC)
-
-
-
-
-
-
-
-
-#-----------------------
-
 
 find_package(antlr4-runtime CONFIG REQUIRED)
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 # 1. THE ACTUAL MODULE: Build the parser as an Object Library or Static Library
 # (An OBJECT library just compiles the .cpp files without linking them yet, 
 # which is perfect for combining into a DLL later).
-add_library(AntlrModuleLib OBJECT 
+add_library(fluxpp OBJECT
     fluxppLexer.cpp 
     fluxppParser.cpp
     fluxppBaseListener.cpp
@@ -48,16 +13,16 @@ add_library(AntlrModuleLib OBJECT
     fluxppListener.cpp
     fluxppVisitor.cpp
     functions.cpp
-    diagnostic/diagnostic_impl.cpp
+    diagnose/diagnostic_impl.cpp
 )
-target_link_libraries(AntlrModuleLib PRIVATE CoreHeaders antlr4_static)
-target_compile_definitions(AntlrModuleLib PRIVATE ANTLR4CPP_STATIC)
+target_link_libraries(fluxpp PRIVATE CoreHeaders antlr4_static absl::flat_hash_map)
+target_compile_definitions(fluxpp PRIVATE ANTLR4CPP_STATIC)
 
 # 2. THE LOCAL TEST: Create an executable just for testing this module
 add_executable(TestParser main_test.cpp)
 
 # Link the test executable to our newly created module library
-target_link_libraries(TestParser PRIVATE AntlrModuleLib)
+target_link_libraries(TestParser PRIVATE fluxpp antlr4_static CoreHeaders absl::flat_hash_map)
 
 
 

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 3.20)
 
 # We include C because you have sqlite3.c
 project(atlas LANGUAGES CXX C)
@@ -7,10 +7,18 @@ project(atlas LANGUAGES CXX C)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
+set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Release>:Release>")
+
+
+add_library(CoreHeaders INTERFACE)
+target_include_directories(CoreHeaders INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/include)
+
 # --- 2. DEPENDENCIES ---
 # A. LibTorch
 # CLion will look for the library path defined in Settings (see Step 2 below)
 find_package(Torch REQUIRED)
+find_package(antlr4-runtime CONFIG REQUIRED)
 find_package(Arrow CONFIG REQUIRED)
 find_package(re2 CONFIG REQUIRED)
 find_package(absl CONFIG REQUIRED)
@@ -24,48 +32,22 @@ if(NOT MSVC_TOOLSET_VERSION)
     endif()
 endif()
 
+add_subdirectory(src/scripting/fluxpp)
 
-#add_subdirectory()
-
-# --- 3. SOURCES ---
-# Automatically find all sources in 'src' and root
-file(GLOB_RECURSE PROJ_SOURCES
-    "src/*.cpp"
-    "src/*.c"
-    "src/*.h"
-        "src/*.cc"
-        "src/*.hh"
-        "src/*.hpp"
-    "atlas.cpp"
+add_library(FinalAtlas STATIC
+        $<TARGET_OBJECTS:fluxpp>
+        # $<TARGET_OBJECTS:another_module>
 )
-
-# --- 4. TARGET ---
-add_executable(atlas ${PROJ_SOURCES}
-    atlas.cpp
-)
-
-
-add_library(antlr4_static STATIC IMPORTED)
-set_target_properties(antlr4_static PROPERTIES
-        IMPORTED_LOCATION_DEBUG   "C:/antlr/lib/x64_debug/antlr4-runtime.lib"
-        IMPORTED_LOCATION_RELEASE "C:/antlr/lib/x64/antlr4-runtime.lib"
-)
-
-target_link_libraries(atlas PRIVATE antlr4_static)
-
-# --- 5. INCLUDES & LINKS ---
-# Include your local headers
-target_include_directories(atlas PRIVATE "src/include")
-target_include_directories(atlas PRIVATE "src/include/antlr")
+target_link_libraries(FinalAtlas PUBLIC CoreHeaders antlr4-runtime)
 
 # Link LibTorch (Includes all headers/flags automatically)
-target_link_libraries(atlas PRIVATE "${TORCH_LIBRARIES}")
-target_link_libraries(atlas PRIVATE
-        Arrow::arrow_shared      # Use shared library for Arrow
-        re2::re2                 # Regular expressions
-)
+# target_link_libraries(atlas PRIVATE "${TORCH_LIBRARIES}")
+# target_link_libraries(atlas PRIVATE
+#         Arrow::arrow_shared      # Use shared library for Arrow
+#         re2::re2                 # Regular expressions
+# )
 
-target_link_libraries(atlas PRIVATE
+target_link_libraries(FinalAtlas PRIVATE
         absl::strings
         absl::flat_hash_map
         absl::flat_hash_set
@@ -75,19 +57,19 @@ target_link_libraries(atlas PRIVATE
 
 # Link Local Libraries (DuckDB, etc.)
 # Assuming 'lib' folder is at E:/axiom/atlas/lib
-target_link_directories(atlas PRIVATE "lib")
-target_link_libraries(atlas PRIVATE "duckdb") 
+target_link_directories(FinalAtlas PRIVATE "lib")
+target_link_libraries(FinalAtlas PRIVATE "duckdb")
 
 # --- 6. POST-BUILD (DLL COPY) ---
 # CLion runs the exe from a build folder, so we must copy DLLs there.
 # This command works for both VS and Ninja generators.
-add_custom_command(TARGET atlas POST_BUILD
+add_custom_command(TARGET FinalAtlas POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
     "C:/libtorch/lib/torch.dll"
     "C:/libtorch/lib/torch_cpu.dll"
     "C:/libtorch/lib/c10.dll"
     # Also copy nvToolsExt if you eventually use CUDA
     # "C:/libtorch/lib/nvToolsExt64_1.dll" 
-    $<TARGET_FILE_DIR:atlas>
+    $<TARGET_FILE_DIR:FinalAtlas>
     COMMENT "Copying LibTorch DLLs..."
 )

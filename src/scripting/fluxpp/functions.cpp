@@ -212,53 +212,53 @@ double scripting::fluxpp::resolve_scalar_function_scalar(const ArgArray &args, c
         // Date calculations
         case 84: {
             // get year
-            const auto ts = std::bit_cast<uint64_t>(args[0]);
+            const auto ts = std::bit_cast<TimeStampAlignType>(args[0]);
             return get_year(ts);
         }
         case 85: {
             // get day of year
-            const auto ts = std::bit_cast<uint64_t>(args[0]);
+            const auto ts = std::bit_cast<TimeStampAlignType>(args[0]);
             return get_day_of_year(ts);
         }
         case 86: {
             // get month
-            const auto ts = std::bit_cast<uint64_t>(args[0]);
+            const auto ts = std::bit_cast<TimeStampAlignType>(args[0]);
             return get_month(ts);
         }
         case 87: {
             // get day
-            const auto ts = std::bit_cast<uint64_t>(args[0]);
+            const auto ts = std::bit_cast<TimeStampAlignType>(args[0]);
             return get_day(ts);
         }
         case 88: {
             // get day of week
-            const auto ts = std::bit_cast<uint64_t>(args[0]);
+            const auto ts = std::bit_cast<TimeStampAlignType>(args[0]);
             return get_day_of_week(ts);
         }
         case 89: {
             // get week_of_year
-            const auto ts = std::bit_cast<uint64_t>(args[0]);
+            const auto ts = std::bit_cast<TimeStampAlignType>(args[0]);
             return get_week_of_year(ts);
         }
         case 90: {
             // get hour
-            const auto ts = std::bit_cast<uint64_t>(args[0]);
+            const auto ts = std::bit_cast<TimeStampAlignType>(args[0]);
             return get_hour(ts);
         }
         case 91: {
             // get minute
-            const auto ts = std::bit_cast<uint64_t>(args[0]);
+            const auto ts = std::bit_cast<TimeStampAlignType>(args[0]);
             return get_minute(ts);
         }
         case 92: {
             // get second
-            const auto ts = std::bit_cast<uint64_t>(args[0]);
+            const auto ts = std::bit_cast<TimeStampAlignType>(args[0]);
             return get_second(ts);
         }
         case 93: {
             // get second of day
-            const auto ts = std::bit_cast<uint64_t>(args[0]);
-            return get_seconds_of_day(ts);
+            const auto ts = std::bit_cast<TimeStampAlignType>(args[0]);
+            return get_second_of_day(ts);
         }
         default:
             throw std::invalid_argument("Unknown scalar function index.");
@@ -487,43 +487,43 @@ EigenColDoubleVec scripting::fluxpp::resolve_vector_function_vector(const Vector
 
         case 84: {
             // get year
-            return args[0].unaryExpr([](const double d)->double{ return get_year(std::bit_cast<uint64_t>(d)); });
+            return args[0].unaryExpr([](const double d)->double{ return get_year(std::bit_cast<TimeStampAlignType>(d)); });
         }
         case 85: {
             // get day of year
-            return args[0].unaryExpr([](const double d)->double{ return get_day_of_year(std::bit_cast<uint64_t>(d)); });
+            return args[0].unaryExpr([](const double d)->double{ return get_day_of_year(std::bit_cast<TimeStampAlignType>(d)); });
         }
         case 86: {
             // get month
-            return args[0].unaryExpr([](const double d)->double{ return get_month(std::bit_cast<uint64_t>(d)); });
+            return args[0].unaryExpr([](const double d)->double{ return get_month(std::bit_cast<TimeStampAlignType>(d)); });
         }
         case 87: {
             // get day
-            return args[0].unaryExpr([](const double d)->double{ return get_day(std::bit_cast<uint64_t>(d)); });
+            return args[0].unaryExpr([](const double d)->double{ return get_day(std::bit_cast<TimeStampAlignType>(d)); });
         }
         case 88: {
             // get day of week
-            return args[0].unaryExpr([](const double d)->double{ return get_day_of_week(std::bit_cast<uint64_t>(d)); });
+            return args[0].unaryExpr([](const double d)->double{ return get_day_of_week(std::bit_cast<TimeStampAlignType>(d)); });
         }
         case 89: {
             // get week_of_year
-            return args[0].unaryExpr([](const double d)->double{ return get_week_of_year(std::bit_cast<uint64_t>(d)); });
+            return args[0].unaryExpr([](const double d)->double{ return get_week_of_year(std::bit_cast<TimeStampAlignType>(d)); });
         }
         case 90: {
             // get hour
-            return args[0].unaryExpr([](const double d)->double{ return get_hour(std::bit_cast<uint64_t>(d)); });
+            return args[0].unaryExpr([](const double d)->double{ return get_hour(std::bit_cast<TimeStampAlignType>(d)); });
         }
         case 91: {
             // get minute
-            return args[0].unaryExpr([](const double d)->double{ return get_minute(std::bit_cast<uint64_t>(d)); });
+            return args[0].unaryExpr([](const double d)->double{ return get_minute(std::bit_cast<TimeStampAlignType>(d)); });
         }
         case 92: {
             // get second
-            return args[0].unaryExpr([](const double d)->double{ return get_second(std::bit_cast<uint64_t>(d)); });
+            return args[0].unaryExpr([](const double d)->double{ return get_second(std::bit_cast<TimeStampAlignType>(d)); });
         }
         case 93: {
             // get second of day
-            return args[0].unaryExpr([](const double d)->double{ return get_seconds_of_day(std::bit_cast<uint64_t>(d)); });
+            return args[0].unaryExpr([](const double d)->double{ return get_second_of_day(std::bit_cast<TimeStampAlignType>(d)); });
         }
         default:
             throw std::runtime_error("Invalid argument");
