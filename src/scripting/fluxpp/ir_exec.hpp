@@ -2,13 +2,12 @@
 
 #include <queue>
 #include <algorithm>
-#include <Eigen/Dense>
 #include <absl/container/flat_hash_set.h>
 #include "fluxppParser.h"
 #include "op_codes.hpp"
 #include "types.hpp"
 #include "functions.hpp"
-#include "../../data/ComputeFrame.hpp"
+#include "ComputeFrame.hpp"
 
 namespace scripting::fluxpp {
     /*
@@ -45,7 +44,10 @@ namespace scripting::fluxpp {
         GTE = 3,
     };
 
-    using IRLiteral = std::variant<double, int64_t>;
+    struct IRLiteral {
+        double value;
+        Type type;
+    };
 
     struct alignas(8) Instruction {
         uint64_t instr;
@@ -130,9 +132,9 @@ namespace scripting::fluxpp {
             free_temporaries.insert(temp);
         }
 
-        uint16_t RegisterLiteral(const IRLiteral temp) {
+        uint16_t RegisterLiteral(const double value, const Type type) {
             const uint16_t literal_idx = literals.size();
-            literals.push_back(temp);
+            literals.emplace_back(value, type);
             return static_cast<uint16_t>(literal_idx + LITERAL_RANGE_START);
         }
 
@@ -140,9 +142,9 @@ namespace scripting::fluxpp {
         // Take operand (index into literal array)
         // This contains an index into the string array
         uint16_t RegisterStringLiteral(const std::string& str) {
-            int64_t string_idx = static_cast<int64_t>(strings.size());
+            const int64_t string_idx = static_cast<int64_t>(strings.size());
             const uint16_t literal_idx = literals.size();
-            literals.push_back(string_idx);
+            literals.emplace_back(std::bit_cast<int64_t>(string_idx), Type::TSTRING);
             return static_cast<uint16_t>(literal_idx + LITERAL_RANGE_START);
         }
 
@@ -276,6 +278,9 @@ namespace scripting::fluxpp {
         void emit_not(const uint16_t op1, const uint16_t dest) {
             ir.emplace_back(NOT_B, UNARY, op1, 0, 0, dest);
         }
+        void emit_call_reduce(const uint16_t fn_idx, uint16_t lit_idx_to_fill) {
+            ir.emplace_back(CALL_REDUCE, NONE, fn_idx, 0, 0, lit_idx_to_fill);
+        }
         void emit_call(const uint16_t fn_idx, const uint16_t dest) {
             ir.emplace_back(CALL, NONE, fn_idx, 0, 0, dest);
         }
@@ -309,8 +314,17 @@ namespace scripting::fluxpp {
         void emit_assert(const uint16_t expr_idx) {
             ir.emplace_back(ASSERT, NONE, expr_idx, 0, 0, 0);
         }
+        void emit_broadcast(const uint16_t lit_idx, uint16_t dest) {
+            ir.emplace_back(BROADCAST, NONE, lit_idx, 0, 0, dest);
+        }
         void emit_end() {
             ir.emplace_back(END, NONE, 0, 0, 0, 0);
+        }
+        void set_gen_to_remove() {
+            start_mark_dirty = true;
+        }
+        void set_gen_to_keep() {
+            start_mark_dirty = false;
         }
 
         Program GetProgram() {
@@ -323,7 +337,9 @@ namespace scripting::fluxpp {
         std::vector<Instruction> ir;
         std::vector<IRLiteral> literals;
         std::vector<std::string> strings;
+        std::vector<size_t> dirty_irs;
         size_t mem_req = 0;
+        bool start_mark_dirty = false;
         static constexpr uint16_t MAX_TEMPORARIES = 256;
 
         struct Interval {

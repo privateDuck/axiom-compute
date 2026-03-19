@@ -56,9 +56,6 @@ public:
   virtual void enterAssert_statement(fluxppParser::Assert_statementContext *ctx) = 0;
   virtual void exitAssert_statement(fluxppParser::Assert_statementContext *ctx) = 0;
 
-  virtual void enterTernary(fluxppParser::TernaryContext *ctx) = 0;
-  virtual void exitTernary(fluxppParser::TernaryContext *ctx) = 0;
-
   virtual void enterParens(fluxppParser::ParensContext *ctx) = 0;
   virtual void exitParens(fluxppParser::ParensContext *ctx) = 0;
 
@@ -68,14 +65,8 @@ public:
   virtual void enterExponentiation(fluxppParser::ExponentiationContext *ctx) = 0;
   virtual void exitExponentiation(fluxppParser::ExponentiationContext *ctx) = 0;
 
-  virtual void enterChainedComparisonAscending(fluxppParser::ChainedComparisonAscendingContext *ctx) = 0;
-  virtual void exitChainedComparisonAscending(fluxppParser::ChainedComparisonAscendingContext *ctx) = 0;
-
   virtual void enterDateTime(fluxppParser::DateTimeContext *ctx) = 0;
   virtual void exitDateTime(fluxppParser::DateTimeContext *ctx) = 0;
-
-  virtual void enterDate(fluxppParser::DateContext *ctx) = 0;
-  virtual void exitDate(fluxppParser::DateContext *ctx) = 0;
 
   virtual void enterLogicalOr(fluxppParser::LogicalOrContext *ctx) = 0;
   virtual void exitLogicalOr(fluxppParser::LogicalOrContext *ctx) = 0;
@@ -95,6 +86,9 @@ public:
   virtual void enterAdditive(fluxppParser::AdditiveContext *ctx) = 0;
   virtual void exitAdditive(fluxppParser::AdditiveContext *ctx) = 0;
 
+  virtual void enterLessInequal(fluxppParser::LessInequalContext *ctx) = 0;
+  virtual void exitLessInequal(fluxppParser::LessInequalContext *ctx) = 0;
+
   virtual void enterAbs(fluxppParser::AbsContext *ctx) = 0;
   virtual void exitAbs(fluxppParser::AbsContext *ctx) = 0;
 
@@ -103,9 +97,6 @@ public:
 
   virtual void enterNumber(fluxppParser::NumberContext *ctx) = 0;
   virtual void exitNumber(fluxppParser::NumberContext *ctx) = 0;
-
-  virtual void enterStringLiteral(fluxppParser::StringLiteralContext *ctx) = 0;
-  virtual void exitStringLiteral(fluxppParser::StringLiteralContext *ctx) = 0;
 
   virtual void enterTrueLiteral(fluxppParser::TrueLiteralContext *ctx) = 0;
   virtual void exitTrueLiteral(fluxppParser::TrueLiteralContext *ctx) = 0;
@@ -118,6 +109,21 @@ public:
 
   virtual void enterFunctionCall(fluxppParser::FunctionCallContext *ctx) = 0;
   virtual void exitFunctionCall(fluxppParser::FunctionCallContext *ctx) = 0;
+
+  virtual void enterTernary(fluxppParser::TernaryContext *ctx) = 0;
+  virtual void exitTernary(fluxppParser::TernaryContext *ctx) = 0;
+
+  virtual void enterChainedComparisonAscending(fluxppParser::ChainedComparisonAscendingContext *ctx) = 0;
+  virtual void exitChainedComparisonAscending(fluxppParser::ChainedComparisonAscendingContext *ctx) = 0;
+
+  virtual void enterDate(fluxppParser::DateContext *ctx) = 0;
+  virtual void exitDate(fluxppParser::DateContext *ctx) = 0;
+
+  virtual void enterGreaterInequal(fluxppParser::GreaterInequalContext *ctx) = 0;
+  virtual void exitGreaterInequal(fluxppParser::GreaterInequalContext *ctx) = 0;
+
+  virtual void enterStringLiteral(fluxppParser::StringLiteralContext *ctx) = 0;
+  virtual void exitStringLiteral(fluxppParser::StringLiteralContext *ctx) = 0;
 
   virtual void enterNegate(fluxppParser::NegateContext *ctx) = 0;
   virtual void exitNegate(fluxppParser::NegateContext *ctx) = 0;

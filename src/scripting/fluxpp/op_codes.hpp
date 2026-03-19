@@ -52,6 +52,7 @@ enum OPCODE : uint8_t {
     // --RESERVED--
 
     // CONTROL
+    CALL_REDUCE = 0x71,
     CALL = 0x72, // CALL FUNCTION INDEXED BY PARAM 1
     LDAS = 0x73, // LOAD ARG SCALAR
     LDAV = 0x74, // LOAD ARG VECTOR
@@ -63,6 +64,7 @@ enum OPCODE : uint8_t {
     FILL = 0x7A,
     ASSERT = 0x7B,
     CREATE = 0x7C,
+    BROADCAST = 0x7D,
     // --RESERVED--
 };
 

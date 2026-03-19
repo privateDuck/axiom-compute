@@ -8,31 +8,32 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Release>:Release>")
 
 
-add_library(CoreHeaders INTERFACE)
+add_library(CoreHeaders INTERFACE IMPORTED)
 target_include_directories(CoreHeaders INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/src/include)
 
 # --- 2. DEPENDENCIES ---
 # A. LibTorch
 # CLion will look for the library path defined in Settings (see Step 2 below)
-find_package(Torch REQUIRED)
+# find_package(Torch REQUIRED)
+find_package(hwy CONFIG REQUIRED)
 find_package(antlr4-runtime CONFIG REQUIRED)
 find_package(Arrow CONFIG REQUIRED)
 find_package(re2 CONFIG REQUIRED)
 find_package(absl CONFIG REQUIRED)
 
 # SAFETY CHECK: If the user tries to build Release but LibTorch is Debug-only
-if(NOT MSVC_TOOLSET_VERSION)
+#[[if(NOT MSVC_TOOLSET_VERSION)
     # Check if we are linking against a debug library (rough check)
     get_target_property(TORCH_LOC torch LOCATION)
     if("${TORCH_LOC}" MATCHES "debug" AND "${CMAKE_BUILD_TYPE}" MATCHES "Release")
         message(WARNING "WARNING: You are building in Release mode but LibTorch appears to be Debug. Linker errors may occur.")
     endif()
 endif()
-
+]]
 add_subdirectory(src/scripting/fluxpp)
+add_subdirectory(src/exec/ExprEngine)
 
 add_library(FinalAtlas STATIC
         $<TARGET_OBJECTS:fluxpp>
@@ -59,6 +60,7 @@ target_link_libraries(FinalAtlas PRIVATE
 # Assuming 'lib' folder is at E:/axiom/atlas/lib
 target_link_directories(FinalAtlas PRIVATE "lib")
 target_link_libraries(FinalAtlas PRIVATE "duckdb")
+
 
 # --- 6. POST-BUILD (DLL COPY) ---
 # CLion runs the exe from a build folder, so we must copy DLLs there.

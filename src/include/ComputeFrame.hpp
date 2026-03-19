@@ -13,7 +13,7 @@ namespace df {
     using ColumnType = scripting::fluxpp::Type;
 
     enum class StringEncodeMethod : uint8_t {
-        Ordinal,    // store uint64_t ID directly as double
+        Ordinal,    // store int64_t ID directly as double
         OneHot,     // expand to N binary columns (N = # unique values)
     };
 
@@ -51,7 +51,7 @@ namespace df {
     class DataFrame {
     public:
         using Storage = std::vector<double, Eigen::aligned_allocator<double>>;
-        using StringMap = absl::flat_hash_map<uint64_t, std::string>;
+        using StringMap = absl::flat_hash_map<int64_t, std::string>;
 
         DataFrame() = default;
 
@@ -84,8 +84,37 @@ namespace df {
             _init_validity(ci, valid);
         }
 
+        void AddColumnRealSemantic(const std::string& name,
+                         const Storage& values,
+                         const std::vector<bool>& valid = {})
+        {
+            _require_size(values.size());
+            const size_t ci = _grow(name, ColumnType::TREAL);
+            std::ranges::copy(values, _col_ptr(ci));
+            _init_validity(ci, valid);
+        }
+
+        void AddColumnSemantic(const std::string& name,
+            const ColumnType type,
+            const Storage& values,
+            const std::vector<bool>& valid = {})
+        {
+            _require_size(values.size());
+            const size_t ci = _grow(name, type);
+            std::ranges::copy(values, _col_ptr(ci));
+            _init_validity(ci, valid);
+        }
+
+        void AddColumnBroadcastSemantic(const std::string& name,
+            const ColumnType type,
+            const double value)
+        {
+            const size_t ci = _grow(name, type, value);
+            _init_validity(ci, {});
+        }
+
         void AddColumnDatetime(const std::string& name,
-                             const std::vector<uint64_t>& values,
+                             const std::vector<TimeStampAlignType>& values,
                              const std::vector<bool>& valid = {})
         {
             _require_size(values.size());
@@ -93,6 +122,16 @@ namespace df {
             double* dst = _col_ptr(ci);
             for (size_t i = 0; i < values.size(); ++i)
                 dst[i] = std::bit_cast<double>(values[i]);
+            _init_validity(ci, valid);
+        }
+
+        void AddColumnDatetimeSematic(const std::string& name,
+                             const Storage& values,
+                             const std::vector<bool>& valid = {})
+        {
+            _require_size(values.size());
+            const size_t ci = _grow(name, ColumnType::TTIMESTAMP);
+            std::ranges::copy(values, _col_ptr(ci));
             _init_validity(ci, valid);
         }
 
@@ -104,9 +143,20 @@ namespace df {
             size_t ci = _grow(name, ColumnType::TBOOL);
             double* dst = _col_ptr(ci);
             for (size_t i = 0; i < values.size(); ++i) {
-                uint64_t u = values[i] ? 1u : 0u;
+                int64_t u = values[i] ? 1u : 0u;
                 dst[i] = std::bit_cast<double>(u);
             }
+            _init_validity(ci, valid);
+        }
+
+        void AddColumnBoolSemantic(const std::string& name,
+                             const Storage& values,
+                             const std::vector<bool>& valid = {})
+        {
+            _require_size(values.size());
+            const size_t ci = _grow(name, ColumnType::TBOOL);
+            double* dst = _col_ptr(ci);
+            std::copy_n(values.data(), values.size(), dst);
             _init_validity(ci, valid);
         }
 
@@ -119,8 +169,8 @@ namespace df {
             double* dst = _col_ptr(ci);
 
             StringMap& dict = string_dicts_[ci];
-            absl::flat_hash_map<std::string, uint64_t> rev;   // dedup cache
-            uint64_t next_id = 0;
+            absl::flat_hash_map<std::string, int64_t> rev;   // dedup cache
+            int64_t next_id = 0;
 
             for (size_t i = 0; i < values.size(); ++i) {
                 auto [it, inserted] = rev.emplace(values[i], next_id);
@@ -148,19 +198,19 @@ namespace df {
             return data_[col * num_rows_ + row];
         }
 
-        [[nodiscard]] uint64_t GetDatetime(const size_t col, const size_t row) const {
+        [[nodiscard]] TimeStampAlignType GetDatetime(const size_t col, const size_t row) const {
             _tchk(col, row, ColumnType::TTIMESTAMP);
-            return std::bit_cast<uint64_t>(data_[col * num_rows_ + row]);
+            return std::bit_cast<TimeStampAlignType>(data_[col * num_rows_ + row]);
         }
 
         [[nodiscard]] bool GetBool(const size_t col, const size_t row) const {
             _tchk(col, row, ColumnType::TBOOL);
-            return std::bit_cast<uint64_t>(data_[col * num_rows_ + row]) != 0u;
+            return std::bit_cast<int64_t>(data_[col * num_rows_ + row]) != 0u;
         }
 
         [[nodiscard]] const std::string& GetString(const size_t col, const size_t row) const {
             _tchk(col, row, ColumnType::TSTRING);
-            const auto id = std::bit_cast<uint64_t>(data_[col * num_rows_ + row]);
+            const auto id = std::bit_cast<int64_t>(data_[col * num_rows_ + row]);
             return string_dicts_.at(col).at(id);
         }
 
@@ -169,14 +219,14 @@ namespace df {
             data_[col * num_rows_ + row] = v;
         }
 
-        void SetDatetime(const size_t col, const size_t row, const uint64_t timestamp) {
+        void SetDatetime(const size_t col, const size_t row, const TimeStampAlignType timestamp) {
             _tchk(col, row, ColumnType::TTIMESTAMP);
             data_[col * num_rows_ + row] = std::bit_cast<double>(timestamp);
         }
 
         void SetBool(const size_t col, const size_t row, const bool v) {
             _tchk(col, row, ColumnType::TBOOL);
-            uint64_t u = v ? 1u : 0u;
+            const int64_t u = v ? 1u : 0u;
             data_[col * num_rows_ + row] = std::bit_cast<double>(u);
         }
 
@@ -193,7 +243,7 @@ namespace df {
             }
 
             // This adds an unknown entry. Should be cautious
-            const auto new_id = static_cast<uint64_t>(dict.size());
+            const auto new_id = static_cast<int64_t>(dict.size());
             dict[new_id] = s;
             data_[col * num_rows_ + row] = std::bit_cast<double>(new_id);
         }
@@ -366,7 +416,7 @@ namespace df {
 
                     case ColumnType::TBOOL:
                         for (size_t r = 0; r < num_rows_; ++r) {
-                            const auto v = std::bit_cast<uint64_t>(data_[c * num_rows_ + r]);
+                            const auto v = std::bit_cast<int64_t>(data_[c * num_rows_ + r]);
                             M(ei(r), ei(oc)) = (v != 0u) ? 1.0 : 0.0;
                         }
                         ++oc;
@@ -374,7 +424,7 @@ namespace df {
 
                     case ColumnType::TTIMESTAMP:
                         for (size_t r = 0; r < num_rows_; ++r) {
-                            auto ep = std::bit_cast<uint64_t>(data_[c * num_rows_ + r]);
+                            auto ep = std::bit_cast<TimeStampAlignType>(data_[c * num_rows_ + r]);
                             M(ei(r), ei(oc)) = _dt_field(ep, dt_enc);
                         }
                         ++oc;
@@ -383,7 +433,7 @@ namespace df {
                     case ColumnType::TSTRING:
                         if (str_enc == StringEncodeMethod::Ordinal) {
                             for (size_t r = 0; r < num_rows_; ++r) {
-                                const auto id = std::bit_cast<uint64_t>(
+                                const auto id = std::bit_cast<int64_t>(
                                                   data_[c * num_rows_ + r]);
                                 M(ei(r), ei(oc)) = static_cast<double>(id);
                             }
@@ -391,17 +441,17 @@ namespace df {
                         } else {
                             // One-hot: stable ordering by sorted ID
                             const auto& dict = string_dicts_.at(c);
-                            std::vector<uint64_t> ids;
+                            std::vector<int64_t> ids;
                             ids.reserve(dict.size());
                             for (const auto &id: dict | std::views::keys) ids.push_back(id);
                             std::ranges::sort(ids);
 
-                            absl::flat_hash_map<uint64_t, size_t> id_off;
+                            absl::flat_hash_map<int64_t, size_t> id_off;
                             for (size_t i = 0; i < ids.size(); ++i)
                                 id_off[ids[i]] = i;
 
                             for (size_t r = 0; r < num_rows_; ++r) {
-                                const auto id = std::bit_cast<uint64_t>(data_[c * num_rows_ + r]);
+                                const auto id = std::bit_cast<int64_t>(data_[c * num_rows_ + r]);
                                 M(ei(r), ei(oc + id_off.at(id))) = 1.0;
                             }
                             oc += ids.size();
@@ -460,14 +510,14 @@ namespace df {
 
         /// Append one column slot: grow backing store + bitmap, register metadata.
         /// Returns the new physical column index.
-        size_t _grow(const std::string& name, const ColumnType type) {
+        size_t _grow(const std::string& name, const ColumnType type, double default_val = 0.0) {
             if (col_index_.contains(name))
                 throw std::invalid_argument("Duplicate column name: " + name);
 
             const size_t ci = schema_.size();
 
             // Backing store: append num_rows_ zero-initialized doubles
-            Storage nd((ci + 1) * num_rows_, 0.0);
+            Storage nd((ci + 1) * num_rows_, default_val);
             std::ranges::copy(data_, nd.begin());
             data_ = std::move(nd);
 
@@ -560,7 +610,7 @@ namespace df {
                 throw std::runtime_error("Type mismatch for column '" + schema_[col].name + "'");
         }
 
-        static double _dt_field(const uint64_t ts, DateTimeEncodeMethod m) noexcept
+        static double _dt_field(const TimeStampAlignType ts, DateTimeEncodeMethod m) noexcept
         {
             switch (m) {
                 case DateTimeEncodeMethod::Year:

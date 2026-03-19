@@ -28,7 +28,7 @@ rename: RENAME oldCol = ID TO newCol = ID ENDLINE;
 fill: FILL ID WITH expr ENDLINE;
 assert_statement: ASSERT expr ENDLINE;
 
-expr:
+expr returns [ int type = 0 ]:
 	'(' expr ')'					# Parens
 	| '|' expr '|'					# Abs
 	| function = ID '(' args ')'	# FunctionCall
@@ -41,7 +41,7 @@ expr:
 	| NOT expr	# LogicalNot
 
 	// 3. Math
-	| <assoc = left> left = expr op = ('*' | '/' | '%') right = expr	# Multiplicative
+	| <assoc = left> left = expr op = ('*' | '/') right = expr	        # Multiplicative
 	| <assoc = left> left = expr op = ('+' | '-') right = expr			# Additive
 
 	// 4. Chained Comparison (Specific cases first)
@@ -55,14 +55,9 @@ expr:
 	) right = expr # ChainedComparisonDescending
 
 	// 5. Standard Comparison
-	| <assoc = left> left = expr op = (
-		'=='
-		| '!='
-		| '<'
-		| '>'
-		| '<='
-		| '>='
-	) right = expr # Comparison
+	| <assoc = left> left = expr op = ( '=='| '!=' ) right = expr # Comparison
+	| <assoc = left> left = expr op = ( '<' | '<=' ) right = expr # LessInequal
+	| <assoc = left> left = expr op = ( '>' | '>=' ) right = expr # GreaterInequal
 
 	// 6. Logic
 	| <assoc = left> left = expr op = AND right = expr	# LogicalAnd

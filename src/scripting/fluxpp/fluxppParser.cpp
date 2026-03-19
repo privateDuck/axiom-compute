@@ -59,23 +59,23 @@ void fluxppParserInitialize() {
     },
     std::vector<std::string>{
       "", "'='", "','", "'('", "')'", "'|'", "'^'", "'-'", "'*'", "'/'", 
-      "'%'", "'+'", "'<'", "'<='", "'>'", "'>='", "'=='", "'!='", "'as'", 
-      "'and'", "'else'", "'drop'", "'let'", "'create'", "'keep'", "'remove'", 
-      "'clamp'", "'set'", "'rename'", "'fill'", "'assert'", "'with'", "'or'", 
-      "'not'", "'if'", "'in'", "'from'", "'to'", "'null'", "'true'", "'false'", 
-      "", "", "", "", "", "", "", "';'"
+      "'+'", "'<'", "'<='", "'>'", "'>='", "'=='", "'!='", "'as'", "'and'", 
+      "'else'", "'drop'", "'let'", "'create'", "'keep'", "'remove'", "'clamp'", 
+      "'set'", "'rename'", "'fill'", "'assert'", "'with'", "'or'", "'not'", 
+      "'if'", "'in'", "'from'", "'to'", "'null'", "'true'", "'false'", "", 
+      "", "", "", "", "", "", "';'"
     },
     std::vector<std::string>{
       "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", 
-      "", "AS", "AND", "ELSE", "DROP", "LET", "CREATE", "KEEP", "REMOVE", 
-      "CLAMP", "SET", "RENAME", "FILL", "ASSERT", "WITH", "OR", "NOT", "IF", 
-      "IN", "FROM", "TO", "NULL", "TRUE", "FALSE", "ISO_DATETIME", "ISO_DATE", 
+      "AS", "AND", "ELSE", "DROP", "LET", "CREATE", "KEEP", "REMOVE", "CLAMP", 
+      "SET", "RENAME", "FILL", "ASSERT", "WITH", "OR", "NOT", "IF", "IN", 
+      "FROM", "TO", "NULL", "TRUE", "FALSE", "ISO_DATETIME", "ISO_DATE", 
       "ISO_TIME", "NUMBER", "STRING_LITERAL", "UNTERMINATED_STRING_LITERAL", 
       "ID", "ENDLINE", "NEWLINE", "WS", "BLOCK_COMMENT", "LINE_COMMENT"
     }
   );
   static const int32_t serializedATNSegment[] = {
-  	4,1,52,205,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,6,2,
+  	4,1,51,211,2,0,7,0,2,1,7,1,2,2,7,2,2,3,7,3,2,4,7,4,2,5,7,5,2,6,7,6,2,
   	7,7,7,2,8,7,8,2,9,7,9,2,10,7,10,2,11,7,11,2,12,7,12,2,13,7,13,2,14,7,
   	14,2,15,7,15,1,0,1,0,3,0,35,8,0,1,1,5,1,38,8,1,10,1,12,1,41,9,1,1,1,1,
   	1,1,2,1,2,1,2,1,3,1,3,1,3,1,3,1,3,1,3,1,3,1,3,1,3,1,3,3,3,58,8,3,1,4,
@@ -87,61 +87,64 @@ void fluxppParserInitialize() {
   	14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,
   	14,1,14,1,14,3,14,154,8,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,
   	14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,
-  	14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,5,
-  	14,192,8,14,10,14,12,14,195,9,14,1,15,1,15,1,15,5,15,200,8,15,10,15,12,
-  	15,203,9,15,1,15,0,1,28,16,0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,
-  	0,5,1,0,8,10,2,0,7,7,11,11,1,0,12,13,1,0,14,15,1,0,12,17,224,0,34,1,0,
-  	0,0,2,39,1,0,0,0,4,44,1,0,0,0,6,57,1,0,0,0,8,59,1,0,0,0,10,65,1,0,0,0,
-  	12,71,1,0,0,0,14,76,1,0,0,0,16,81,1,0,0,0,18,96,1,0,0,0,20,104,1,0,0,
-  	0,22,110,1,0,0,0,24,116,1,0,0,0,26,122,1,0,0,0,28,153,1,0,0,0,30,196,
-  	1,0,0,0,32,35,3,2,1,0,33,35,3,4,2,0,34,32,1,0,0,0,34,33,1,0,0,0,35,1,
-  	1,0,0,0,36,38,3,6,3,0,37,36,1,0,0,0,38,41,1,0,0,0,39,37,1,0,0,0,39,40,
-  	1,0,0,0,40,42,1,0,0,0,41,39,1,0,0,0,42,43,5,0,0,1,43,3,1,0,0,0,44,45,
-  	3,28,14,0,45,46,5,0,0,1,46,5,1,0,0,0,47,58,3,10,5,0,48,58,3,8,4,0,49,
-  	58,3,12,6,0,50,58,3,14,7,0,51,58,3,16,8,0,52,58,3,18,9,0,53,58,3,20,10,
-  	0,54,58,3,22,11,0,55,58,3,24,12,0,56,58,3,26,13,0,57,47,1,0,0,0,57,48,
-  	1,0,0,0,57,49,1,0,0,0,57,50,1,0,0,0,57,51,1,0,0,0,57,52,1,0,0,0,57,53,
-  	1,0,0,0,57,54,1,0,0,0,57,55,1,0,0,0,57,56,1,0,0,0,58,7,1,0,0,0,59,60,
-  	5,22,0,0,60,61,5,47,0,0,61,62,5,1,0,0,62,63,3,28,14,0,63,64,5,48,0,0,
-  	64,9,1,0,0,0,65,66,5,23,0,0,66,67,5,47,0,0,67,68,5,18,0,0,68,69,3,28,
-  	14,0,69,70,5,48,0,0,70,11,1,0,0,0,71,72,5,24,0,0,72,73,5,34,0,0,73,74,
-  	3,28,14,0,74,75,5,48,0,0,75,13,1,0,0,0,76,77,5,21,0,0,77,78,5,34,0,0,
-  	78,79,3,28,14,0,79,80,5,48,0,0,80,15,1,0,0,0,81,82,5,25,0,0,82,87,5,47,
-  	0,0,83,84,5,2,0,0,84,86,5,47,0,0,85,83,1,0,0,0,86,89,1,0,0,0,87,85,1,
-  	0,0,0,87,88,1,0,0,0,88,92,1,0,0,0,89,87,1,0,0,0,90,91,5,34,0,0,91,93,
-  	3,28,14,0,92,90,1,0,0,0,92,93,1,0,0,0,93,94,1,0,0,0,94,95,5,48,0,0,95,
-  	17,1,0,0,0,96,97,5,26,0,0,97,98,5,47,0,0,98,99,5,36,0,0,99,100,3,28,14,
-  	0,100,101,5,37,0,0,101,102,3,28,14,0,102,103,5,48,0,0,103,19,1,0,0,0,
-  	104,105,5,27,0,0,105,106,5,47,0,0,106,107,5,1,0,0,107,108,3,28,14,0,108,
-  	109,5,48,0,0,109,21,1,0,0,0,110,111,5,28,0,0,111,112,5,47,0,0,112,113,
-  	5,37,0,0,113,114,5,47,0,0,114,115,5,48,0,0,115,23,1,0,0,0,116,117,5,29,
-  	0,0,117,118,5,47,0,0,118,119,5,31,0,0,119,120,3,28,14,0,120,121,5,48,
-  	0,0,121,25,1,0,0,0,122,123,5,30,0,0,123,124,3,28,14,0,124,125,5,48,0,
-  	0,125,27,1,0,0,0,126,127,6,14,-1,0,127,128,5,3,0,0,128,129,3,28,14,0,
-  	129,130,5,4,0,0,130,154,1,0,0,0,131,132,5,5,0,0,132,133,3,28,14,0,133,
-  	134,5,5,0,0,134,154,1,0,0,0,135,136,5,47,0,0,136,137,5,3,0,0,137,138,
-  	3,30,15,0,138,139,5,4,0,0,139,154,1,0,0,0,140,141,5,7,0,0,141,154,3,28,
-  	14,19,142,143,5,33,0,0,143,154,3,28,14,18,144,154,5,47,0,0,145,154,5,
-  	44,0,0,146,154,5,41,0,0,147,154,5,42,0,0,148,154,5,43,0,0,149,154,5,45,
-  	0,0,150,154,5,39,0,0,151,154,5,40,0,0,152,154,5,38,0,0,153,126,1,0,0,
-  	0,153,131,1,0,0,0,153,135,1,0,0,0,153,140,1,0,0,0,153,142,1,0,0,0,153,
-  	144,1,0,0,0,153,145,1,0,0,0,153,146,1,0,0,0,153,147,1,0,0,0,153,148,1,
-  	0,0,0,153,149,1,0,0,0,153,150,1,0,0,0,153,151,1,0,0,0,153,152,1,0,0,0,
-  	154,193,1,0,0,0,155,156,10,20,0,0,156,157,5,6,0,0,157,192,3,28,14,20,
-  	158,159,10,17,0,0,159,160,7,0,0,0,160,192,3,28,14,18,161,162,10,16,0,
-  	0,162,163,7,1,0,0,163,192,3,28,14,17,164,165,10,15,0,0,165,166,7,2,0,
-  	0,166,167,3,28,14,0,167,168,7,2,0,0,168,169,3,28,14,16,169,192,1,0,0,
-  	0,170,171,10,14,0,0,171,172,7,3,0,0,172,173,3,28,14,0,173,174,7,3,0,0,
-  	174,175,3,28,14,15,175,192,1,0,0,0,176,177,10,13,0,0,177,178,7,4,0,0,
-  	178,192,3,28,14,14,179,180,10,12,0,0,180,181,5,19,0,0,181,192,3,28,14,
-  	13,182,183,10,11,0,0,183,184,5,32,0,0,184,192,3,28,14,12,185,186,10,10,
-  	0,0,186,187,5,34,0,0,187,188,3,28,14,0,188,189,5,20,0,0,189,190,3,28,
-  	14,10,190,192,1,0,0,0,191,155,1,0,0,0,191,158,1,0,0,0,191,161,1,0,0,0,
-  	191,164,1,0,0,0,191,170,1,0,0,0,191,176,1,0,0,0,191,179,1,0,0,0,191,182,
-  	1,0,0,0,191,185,1,0,0,0,192,195,1,0,0,0,193,191,1,0,0,0,193,194,1,0,0,
-  	0,194,29,1,0,0,0,195,193,1,0,0,0,196,201,3,28,14,0,197,198,5,2,0,0,198,
-  	200,3,28,14,0,199,197,1,0,0,0,200,203,1,0,0,0,201,199,1,0,0,0,201,202,
-  	1,0,0,0,202,31,1,0,0,0,203,201,1,0,0,0,9,34,39,57,87,92,153,191,193,201
+  	14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,14,1,
+  	14,1,14,1,14,1,14,1,14,1,14,5,14,198,8,14,10,14,12,14,201,9,14,1,15,1,
+  	15,1,15,5,15,206,8,15,10,15,12,15,209,9,15,1,15,0,1,28,16,0,2,4,6,8,10,
+  	12,14,16,18,20,22,24,26,28,30,0,5,1,0,8,9,2,0,7,7,10,10,1,0,11,12,1,0,
+  	13,14,1,0,15,16,232,0,34,1,0,0,0,2,39,1,0,0,0,4,44,1,0,0,0,6,57,1,0,0,
+  	0,8,59,1,0,0,0,10,65,1,0,0,0,12,71,1,0,0,0,14,76,1,0,0,0,16,81,1,0,0,
+  	0,18,96,1,0,0,0,20,104,1,0,0,0,22,110,1,0,0,0,24,116,1,0,0,0,26,122,1,
+  	0,0,0,28,153,1,0,0,0,30,202,1,0,0,0,32,35,3,2,1,0,33,35,3,4,2,0,34,32,
+  	1,0,0,0,34,33,1,0,0,0,35,1,1,0,0,0,36,38,3,6,3,0,37,36,1,0,0,0,38,41,
+  	1,0,0,0,39,37,1,0,0,0,39,40,1,0,0,0,40,42,1,0,0,0,41,39,1,0,0,0,42,43,
+  	5,0,0,1,43,3,1,0,0,0,44,45,3,28,14,0,45,46,5,0,0,1,46,5,1,0,0,0,47,58,
+  	3,10,5,0,48,58,3,8,4,0,49,58,3,12,6,0,50,58,3,14,7,0,51,58,3,16,8,0,52,
+  	58,3,18,9,0,53,58,3,20,10,0,54,58,3,22,11,0,55,58,3,24,12,0,56,58,3,26,
+  	13,0,57,47,1,0,0,0,57,48,1,0,0,0,57,49,1,0,0,0,57,50,1,0,0,0,57,51,1,
+  	0,0,0,57,52,1,0,0,0,57,53,1,0,0,0,57,54,1,0,0,0,57,55,1,0,0,0,57,56,1,
+  	0,0,0,58,7,1,0,0,0,59,60,5,21,0,0,60,61,5,46,0,0,61,62,5,1,0,0,62,63,
+  	3,28,14,0,63,64,5,47,0,0,64,9,1,0,0,0,65,66,5,22,0,0,66,67,5,46,0,0,67,
+  	68,5,17,0,0,68,69,3,28,14,0,69,70,5,47,0,0,70,11,1,0,0,0,71,72,5,23,0,
+  	0,72,73,5,33,0,0,73,74,3,28,14,0,74,75,5,47,0,0,75,13,1,0,0,0,76,77,5,
+  	20,0,0,77,78,5,33,0,0,78,79,3,28,14,0,79,80,5,47,0,0,80,15,1,0,0,0,81,
+  	82,5,24,0,0,82,87,5,46,0,0,83,84,5,2,0,0,84,86,5,46,0,0,85,83,1,0,0,0,
+  	86,89,1,0,0,0,87,85,1,0,0,0,87,88,1,0,0,0,88,92,1,0,0,0,89,87,1,0,0,0,
+  	90,91,5,33,0,0,91,93,3,28,14,0,92,90,1,0,0,0,92,93,1,0,0,0,93,94,1,0,
+  	0,0,94,95,5,47,0,0,95,17,1,0,0,0,96,97,5,25,0,0,97,98,5,46,0,0,98,99,
+  	5,35,0,0,99,100,3,28,14,0,100,101,5,36,0,0,101,102,3,28,14,0,102,103,
+  	5,47,0,0,103,19,1,0,0,0,104,105,5,26,0,0,105,106,5,46,0,0,106,107,5,1,
+  	0,0,107,108,3,28,14,0,108,109,5,47,0,0,109,21,1,0,0,0,110,111,5,27,0,
+  	0,111,112,5,46,0,0,112,113,5,36,0,0,113,114,5,46,0,0,114,115,5,47,0,0,
+  	115,23,1,0,0,0,116,117,5,28,0,0,117,118,5,46,0,0,118,119,5,30,0,0,119,
+  	120,3,28,14,0,120,121,5,47,0,0,121,25,1,0,0,0,122,123,5,29,0,0,123,124,
+  	3,28,14,0,124,125,5,47,0,0,125,27,1,0,0,0,126,127,6,14,-1,0,127,128,5,
+  	3,0,0,128,129,3,28,14,0,129,130,5,4,0,0,130,154,1,0,0,0,131,132,5,5,0,
+  	0,132,133,3,28,14,0,133,134,5,5,0,0,134,154,1,0,0,0,135,136,5,46,0,0,
+  	136,137,5,3,0,0,137,138,3,30,15,0,138,139,5,4,0,0,139,154,1,0,0,0,140,
+  	141,5,7,0,0,141,154,3,28,14,21,142,143,5,32,0,0,143,154,3,28,14,20,144,
+  	154,5,46,0,0,145,154,5,43,0,0,146,154,5,40,0,0,147,154,5,41,0,0,148,154,
+  	5,42,0,0,149,154,5,44,0,0,150,154,5,38,0,0,151,154,5,39,0,0,152,154,5,
+  	37,0,0,153,126,1,0,0,0,153,131,1,0,0,0,153,135,1,0,0,0,153,140,1,0,0,
+  	0,153,142,1,0,0,0,153,144,1,0,0,0,153,145,1,0,0,0,153,146,1,0,0,0,153,
+  	147,1,0,0,0,153,148,1,0,0,0,153,149,1,0,0,0,153,150,1,0,0,0,153,151,1,
+  	0,0,0,153,152,1,0,0,0,154,199,1,0,0,0,155,156,10,22,0,0,156,157,5,6,0,
+  	0,157,198,3,28,14,22,158,159,10,19,0,0,159,160,7,0,0,0,160,198,3,28,14,
+  	20,161,162,10,18,0,0,162,163,7,1,0,0,163,198,3,28,14,19,164,165,10,17,
+  	0,0,165,166,7,2,0,0,166,167,3,28,14,0,167,168,7,2,0,0,168,169,3,28,14,
+  	18,169,198,1,0,0,0,170,171,10,16,0,0,171,172,7,3,0,0,172,173,3,28,14,
+  	0,173,174,7,3,0,0,174,175,3,28,14,17,175,198,1,0,0,0,176,177,10,15,0,
+  	0,177,178,7,4,0,0,178,198,3,28,14,16,179,180,10,14,0,0,180,181,7,2,0,
+  	0,181,198,3,28,14,15,182,183,10,13,0,0,183,184,7,3,0,0,184,198,3,28,14,
+  	14,185,186,10,12,0,0,186,187,5,18,0,0,187,198,3,28,14,13,188,189,10,11,
+  	0,0,189,190,5,31,0,0,190,198,3,28,14,12,191,192,10,10,0,0,192,193,5,33,
+  	0,0,193,194,3,28,14,0,194,195,5,19,0,0,195,196,3,28,14,10,196,198,1,0,
+  	0,0,197,155,1,0,0,0,197,158,1,0,0,0,197,161,1,0,0,0,197,164,1,0,0,0,197,
+  	170,1,0,0,0,197,176,1,0,0,0,197,179,1,0,0,0,197,182,1,0,0,0,197,185,1,
+  	0,0,0,197,188,1,0,0,0,197,191,1,0,0,0,198,201,1,0,0,0,199,197,1,0,0,0,
+  	199,200,1,0,0,0,200,29,1,0,0,0,201,199,1,0,0,0,202,207,3,28,14,0,203,
+  	204,5,2,0,0,204,206,3,28,14,0,205,203,1,0,0,0,206,209,1,0,0,0,207,205,
+  	1,0,0,0,207,208,1,0,0,0,208,31,1,0,0,0,209,207,1,0,0,0,9,34,39,57,87,
+  	92,153,197,199,207
   };
   staticData->serializedATN = antlr4::atn::SerializedATNView(serializedATNSegment, sizeof(serializedATNSegment) / sizeof(serializedATNSegment[0]));
 
@@ -355,7 +358,7 @@ fluxppParser::FluxContext* fluxppParser::flux() {
     _errHandler->sync(this);
     _la = _input->LA(1);
     while ((((_la & ~ 0x3fULL) == 0) &&
-      ((1ULL << _la) & 2145386496) != 0)) {
+      ((1ULL << _la) & 1072693248) != 0)) {
       setState(36);
       statement();
       setState(41);
@@ -1478,45 +1481,9 @@ size_t fluxppParser::ExprContext::getRuleIndex() const {
 
 void fluxppParser::ExprContext::copyFrom(ExprContext *ctx) {
   ParserRuleContext::copyFrom(ctx);
+  this->type = ctx->type;
 }
 
-//----------------- TernaryContext ------------------------------------------------------------------
-
-tree::TerminalNode* fluxppParser::TernaryContext::IF() {
-  return getToken(fluxppParser::IF, 0);
-}
-
-tree::TerminalNode* fluxppParser::TernaryContext::ELSE() {
-  return getToken(fluxppParser::ELSE, 0);
-}
-
-std::vector<fluxppParser::ExprContext *> fluxppParser::TernaryContext::expr() {
-  return getRuleContexts<fluxppParser::ExprContext>();
-}
-
-fluxppParser::ExprContext* fluxppParser::TernaryContext::expr(size_t i) {
-  return getRuleContext<fluxppParser::ExprContext>(i);
-}
-
-fluxppParser::TernaryContext::TernaryContext(ExprContext *ctx) { copyFrom(ctx); }
-
-void fluxppParser::TernaryContext::enterRule(tree::ParseTreeListener *listener) {
-  auto parserListener = dynamic_cast<fluxppListener *>(listener);
-  if (parserListener != nullptr)
-    parserListener->enterTernary(this);
-}
-void fluxppParser::TernaryContext::exitRule(tree::ParseTreeListener *listener) {
-  auto parserListener = dynamic_cast<fluxppListener *>(listener);
-  if (parserListener != nullptr)
-    parserListener->exitTernary(this);
-}
-
-std::any fluxppParser::TernaryContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<fluxppVisitor*>(visitor))
-    return parserVisitor->visitTernary(this);
-  else
-    return visitor->visitChildren(this);
-}
 //----------------- ParensContext ------------------------------------------------------------------
 
 fluxppParser::ExprContext* fluxppParser::ParensContext::expr() {
@@ -1596,35 +1563,6 @@ std::any fluxppParser::ExponentiationContext::accept(tree::ParseTreeVisitor *vis
   else
     return visitor->visitChildren(this);
 }
-//----------------- ChainedComparisonAscendingContext ------------------------------------------------------------------
-
-std::vector<fluxppParser::ExprContext *> fluxppParser::ChainedComparisonAscendingContext::expr() {
-  return getRuleContexts<fluxppParser::ExprContext>();
-}
-
-fluxppParser::ExprContext* fluxppParser::ChainedComparisonAscendingContext::expr(size_t i) {
-  return getRuleContext<fluxppParser::ExprContext>(i);
-}
-
-fluxppParser::ChainedComparisonAscendingContext::ChainedComparisonAscendingContext(ExprContext *ctx) { copyFrom(ctx); }
-
-void fluxppParser::ChainedComparisonAscendingContext::enterRule(tree::ParseTreeListener *listener) {
-  auto parserListener = dynamic_cast<fluxppListener *>(listener);
-  if (parserListener != nullptr)
-    parserListener->enterChainedComparisonAscending(this);
-}
-void fluxppParser::ChainedComparisonAscendingContext::exitRule(tree::ParseTreeListener *listener) {
-  auto parserListener = dynamic_cast<fluxppListener *>(listener);
-  if (parserListener != nullptr)
-    parserListener->exitChainedComparisonAscending(this);
-}
-
-std::any fluxppParser::ChainedComparisonAscendingContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<fluxppVisitor*>(visitor))
-    return parserVisitor->visitChainedComparisonAscending(this);
-  else
-    return visitor->visitChildren(this);
-}
 //----------------- DateTimeContext ------------------------------------------------------------------
 
 tree::TerminalNode* fluxppParser::DateTimeContext::ISO_DATETIME() {
@@ -1647,31 +1585,6 @@ void fluxppParser::DateTimeContext::exitRule(tree::ParseTreeListener *listener) 
 std::any fluxppParser::DateTimeContext::accept(tree::ParseTreeVisitor *visitor) {
   if (auto parserVisitor = dynamic_cast<fluxppVisitor*>(visitor))
     return parserVisitor->visitDateTime(this);
-  else
-    return visitor->visitChildren(this);
-}
-//----------------- DateContext ------------------------------------------------------------------
-
-tree::TerminalNode* fluxppParser::DateContext::ISO_DATE() {
-  return getToken(fluxppParser::ISO_DATE, 0);
-}
-
-fluxppParser::DateContext::DateContext(ExprContext *ctx) { copyFrom(ctx); }
-
-void fluxppParser::DateContext::enterRule(tree::ParseTreeListener *listener) {
-  auto parserListener = dynamic_cast<fluxppListener *>(listener);
-  if (parserListener != nullptr)
-    parserListener->enterDate(this);
-}
-void fluxppParser::DateContext::exitRule(tree::ParseTreeListener *listener) {
-  auto parserListener = dynamic_cast<fluxppListener *>(listener);
-  if (parserListener != nullptr)
-    parserListener->exitDate(this);
-}
-
-std::any fluxppParser::DateContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<fluxppVisitor*>(visitor))
-    return parserVisitor->visitDate(this);
   else
     return visitor->visitChildren(this);
 }
@@ -1849,6 +1762,35 @@ std::any fluxppParser::AdditiveContext::accept(tree::ParseTreeVisitor *visitor) 
   else
     return visitor->visitChildren(this);
 }
+//----------------- LessInequalContext ------------------------------------------------------------------
+
+std::vector<fluxppParser::ExprContext *> fluxppParser::LessInequalContext::expr() {
+  return getRuleContexts<fluxppParser::ExprContext>();
+}
+
+fluxppParser::ExprContext* fluxppParser::LessInequalContext::expr(size_t i) {
+  return getRuleContext<fluxppParser::ExprContext>(i);
+}
+
+fluxppParser::LessInequalContext::LessInequalContext(ExprContext *ctx) { copyFrom(ctx); }
+
+void fluxppParser::LessInequalContext::enterRule(tree::ParseTreeListener *listener) {
+  auto parserListener = dynamic_cast<fluxppListener *>(listener);
+  if (parserListener != nullptr)
+    parserListener->enterLessInequal(this);
+}
+void fluxppParser::LessInequalContext::exitRule(tree::ParseTreeListener *listener) {
+  auto parserListener = dynamic_cast<fluxppListener *>(listener);
+  if (parserListener != nullptr)
+    parserListener->exitLessInequal(this);
+}
+
+std::any fluxppParser::LessInequalContext::accept(tree::ParseTreeVisitor *visitor) {
+  if (auto parserVisitor = dynamic_cast<fluxppVisitor*>(visitor))
+    return parserVisitor->visitLessInequal(this);
+  else
+    return visitor->visitChildren(this);
+}
 //----------------- AbsContext ------------------------------------------------------------------
 
 fluxppParser::ExprContext* fluxppParser::AbsContext::expr() {
@@ -1921,31 +1863,6 @@ void fluxppParser::NumberContext::exitRule(tree::ParseTreeListener *listener) {
 std::any fluxppParser::NumberContext::accept(tree::ParseTreeVisitor *visitor) {
   if (auto parserVisitor = dynamic_cast<fluxppVisitor*>(visitor))
     return parserVisitor->visitNumber(this);
-  else
-    return visitor->visitChildren(this);
-}
-//----------------- StringLiteralContext ------------------------------------------------------------------
-
-tree::TerminalNode* fluxppParser::StringLiteralContext::STRING_LITERAL() {
-  return getToken(fluxppParser::STRING_LITERAL, 0);
-}
-
-fluxppParser::StringLiteralContext::StringLiteralContext(ExprContext *ctx) { copyFrom(ctx); }
-
-void fluxppParser::StringLiteralContext::enterRule(tree::ParseTreeListener *listener) {
-  auto parserListener = dynamic_cast<fluxppListener *>(listener);
-  if (parserListener != nullptr)
-    parserListener->enterStringLiteral(this);
-}
-void fluxppParser::StringLiteralContext::exitRule(tree::ParseTreeListener *listener) {
-  auto parserListener = dynamic_cast<fluxppListener *>(listener);
-  if (parserListener != nullptr)
-    parserListener->exitStringLiteral(this);
-}
-
-std::any fluxppParser::StringLiteralContext::accept(tree::ParseTreeVisitor *visitor) {
-  if (auto parserVisitor = dynamic_cast<fluxppVisitor*>(visitor))
-    return parserVisitor->visitStringLiteral(this);
   else
     return visitor->visitChildren(this);
 }
@@ -2062,6 +1979,151 @@ void fluxppParser::FunctionCallContext::exitRule(tree::ParseTreeListener *listen
 std::any fluxppParser::FunctionCallContext::accept(tree::ParseTreeVisitor *visitor) {
   if (auto parserVisitor = dynamic_cast<fluxppVisitor*>(visitor))
     return parserVisitor->visitFunctionCall(this);
+  else
+    return visitor->visitChildren(this);
+}
+//----------------- TernaryContext ------------------------------------------------------------------
+
+tree::TerminalNode* fluxppParser::TernaryContext::IF() {
+  return getToken(fluxppParser::IF, 0);
+}
+
+tree::TerminalNode* fluxppParser::TernaryContext::ELSE() {
+  return getToken(fluxppParser::ELSE, 0);
+}
+
+std::vector<fluxppParser::ExprContext *> fluxppParser::TernaryContext::expr() {
+  return getRuleContexts<fluxppParser::ExprContext>();
+}
+
+fluxppParser::ExprContext* fluxppParser::TernaryContext::expr(size_t i) {
+  return getRuleContext<fluxppParser::ExprContext>(i);
+}
+
+fluxppParser::TernaryContext::TernaryContext(ExprContext *ctx) { copyFrom(ctx); }
+
+void fluxppParser::TernaryContext::enterRule(tree::ParseTreeListener *listener) {
+  auto parserListener = dynamic_cast<fluxppListener *>(listener);
+  if (parserListener != nullptr)
+    parserListener->enterTernary(this);
+}
+void fluxppParser::TernaryContext::exitRule(tree::ParseTreeListener *listener) {
+  auto parserListener = dynamic_cast<fluxppListener *>(listener);
+  if (parserListener != nullptr)
+    parserListener->exitTernary(this);
+}
+
+std::any fluxppParser::TernaryContext::accept(tree::ParseTreeVisitor *visitor) {
+  if (auto parserVisitor = dynamic_cast<fluxppVisitor*>(visitor))
+    return parserVisitor->visitTernary(this);
+  else
+    return visitor->visitChildren(this);
+}
+//----------------- ChainedComparisonAscendingContext ------------------------------------------------------------------
+
+std::vector<fluxppParser::ExprContext *> fluxppParser::ChainedComparisonAscendingContext::expr() {
+  return getRuleContexts<fluxppParser::ExprContext>();
+}
+
+fluxppParser::ExprContext* fluxppParser::ChainedComparisonAscendingContext::expr(size_t i) {
+  return getRuleContext<fluxppParser::ExprContext>(i);
+}
+
+fluxppParser::ChainedComparisonAscendingContext::ChainedComparisonAscendingContext(ExprContext *ctx) { copyFrom(ctx); }
+
+void fluxppParser::ChainedComparisonAscendingContext::enterRule(tree::ParseTreeListener *listener) {
+  auto parserListener = dynamic_cast<fluxppListener *>(listener);
+  if (parserListener != nullptr)
+    parserListener->enterChainedComparisonAscending(this);
+}
+void fluxppParser::ChainedComparisonAscendingContext::exitRule(tree::ParseTreeListener *listener) {
+  auto parserListener = dynamic_cast<fluxppListener *>(listener);
+  if (parserListener != nullptr)
+    parserListener->exitChainedComparisonAscending(this);
+}
+
+std::any fluxppParser::ChainedComparisonAscendingContext::accept(tree::ParseTreeVisitor *visitor) {
+  if (auto parserVisitor = dynamic_cast<fluxppVisitor*>(visitor))
+    return parserVisitor->visitChainedComparisonAscending(this);
+  else
+    return visitor->visitChildren(this);
+}
+//----------------- DateContext ------------------------------------------------------------------
+
+tree::TerminalNode* fluxppParser::DateContext::ISO_DATE() {
+  return getToken(fluxppParser::ISO_DATE, 0);
+}
+
+fluxppParser::DateContext::DateContext(ExprContext *ctx) { copyFrom(ctx); }
+
+void fluxppParser::DateContext::enterRule(tree::ParseTreeListener *listener) {
+  auto parserListener = dynamic_cast<fluxppListener *>(listener);
+  if (parserListener != nullptr)
+    parserListener->enterDate(this);
+}
+void fluxppParser::DateContext::exitRule(tree::ParseTreeListener *listener) {
+  auto parserListener = dynamic_cast<fluxppListener *>(listener);
+  if (parserListener != nullptr)
+    parserListener->exitDate(this);
+}
+
+std::any fluxppParser::DateContext::accept(tree::ParseTreeVisitor *visitor) {
+  if (auto parserVisitor = dynamic_cast<fluxppVisitor*>(visitor))
+    return parserVisitor->visitDate(this);
+  else
+    return visitor->visitChildren(this);
+}
+//----------------- GreaterInequalContext ------------------------------------------------------------------
+
+std::vector<fluxppParser::ExprContext *> fluxppParser::GreaterInequalContext::expr() {
+  return getRuleContexts<fluxppParser::ExprContext>();
+}
+
+fluxppParser::ExprContext* fluxppParser::GreaterInequalContext::expr(size_t i) {
+  return getRuleContext<fluxppParser::ExprContext>(i);
+}
+
+fluxppParser::GreaterInequalContext::GreaterInequalContext(ExprContext *ctx) { copyFrom(ctx); }
+
+void fluxppParser::GreaterInequalContext::enterRule(tree::ParseTreeListener *listener) {
+  auto parserListener = dynamic_cast<fluxppListener *>(listener);
+  if (parserListener != nullptr)
+    parserListener->enterGreaterInequal(this);
+}
+void fluxppParser::GreaterInequalContext::exitRule(tree::ParseTreeListener *listener) {
+  auto parserListener = dynamic_cast<fluxppListener *>(listener);
+  if (parserListener != nullptr)
+    parserListener->exitGreaterInequal(this);
+}
+
+std::any fluxppParser::GreaterInequalContext::accept(tree::ParseTreeVisitor *visitor) {
+  if (auto parserVisitor = dynamic_cast<fluxppVisitor*>(visitor))
+    return parserVisitor->visitGreaterInequal(this);
+  else
+    return visitor->visitChildren(this);
+}
+//----------------- StringLiteralContext ------------------------------------------------------------------
+
+tree::TerminalNode* fluxppParser::StringLiteralContext::STRING_LITERAL() {
+  return getToken(fluxppParser::STRING_LITERAL, 0);
+}
+
+fluxppParser::StringLiteralContext::StringLiteralContext(ExprContext *ctx) { copyFrom(ctx); }
+
+void fluxppParser::StringLiteralContext::enterRule(tree::ParseTreeListener *listener) {
+  auto parserListener = dynamic_cast<fluxppListener *>(listener);
+  if (parserListener != nullptr)
+    parserListener->enterStringLiteral(this);
+}
+void fluxppParser::StringLiteralContext::exitRule(tree::ParseTreeListener *listener) {
+  auto parserListener = dynamic_cast<fluxppListener *>(listener);
+  if (parserListener != nullptr)
+    parserListener->exitStringLiteral(this);
+}
+
+std::any fluxppParser::StringLiteralContext::accept(tree::ParseTreeVisitor *visitor) {
+  if (auto parserVisitor = dynamic_cast<fluxppVisitor*>(visitor))
+    return parserVisitor->visitStringLiteral(this);
   else
     return visitor->visitChildren(this);
 }
@@ -2193,7 +2255,7 @@ fluxppParser::ExprContext* fluxppParser::expr(int precedence) {
       setState(140);
       match(fluxppParser::T__6);
       setState(141);
-      expr(19);
+      expr(21);
       break;
     }
 
@@ -2204,7 +2266,7 @@ fluxppParser::ExprContext* fluxppParser::expr(int precedence) {
       setState(142);
       match(fluxppParser::NOT);
       setState(143);
-      expr(18);
+      expr(20);
       break;
     }
 
@@ -2293,7 +2355,7 @@ fluxppParser::ExprContext* fluxppParser::expr(int precedence) {
       break;
     }
     _ctx->stop = _input->LT(-1);
-    setState(193);
+    setState(199);
     _errHandler->sync(this);
     alt = getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 7, _ctx);
     while (alt != 2 && alt != atn::ATN::INVALID_ALT_NUMBER) {
@@ -2301,7 +2363,7 @@ fluxppParser::ExprContext* fluxppParser::expr(int precedence) {
         if (!_parseListeners.empty())
           triggerExitRuleEvent();
         previousContext = _localctx;
-        setState(191);
+        setState(197);
         _errHandler->sync(this);
         switch (getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 6, _ctx)) {
         case 1: {
@@ -2311,11 +2373,11 @@ fluxppParser::ExprContext* fluxppParser::expr(int precedence) {
           pushNewRecursionContext(newContext, startState, RuleExpr);
           setState(155);
 
-          if (!(precpred(_ctx, 20))) throw FailedPredicateException(this, "precpred(_ctx, 20)");
+          if (!(precpred(_ctx, 22))) throw FailedPredicateException(this, "precpred(_ctx, 22)");
           setState(156);
           antlrcpp::downCast<ExponentiationContext *>(_localctx)->op = match(fluxppParser::T__5);
           setState(157);
-          antlrcpp::downCast<ExponentiationContext *>(_localctx)->right = expr(20);
+          antlrcpp::downCast<ExponentiationContext *>(_localctx)->right = expr(22);
           break;
         }
 
@@ -2326,12 +2388,13 @@ fluxppParser::ExprContext* fluxppParser::expr(int precedence) {
           pushNewRecursionContext(newContext, startState, RuleExpr);
           setState(158);
 
-          if (!(precpred(_ctx, 17))) throw FailedPredicateException(this, "precpred(_ctx, 17)");
+          if (!(precpred(_ctx, 19))) throw FailedPredicateException(this, "precpred(_ctx, 19)");
           setState(159);
           antlrcpp::downCast<MultiplicativeContext *>(_localctx)->op = _input->LT(1);
           _la = _input->LA(1);
-          if (!((((_la & ~ 0x3fULL) == 0) &&
-            ((1ULL << _la) & 1792) != 0))) {
+          if (!(_la == fluxppParser::T__7
+
+          || _la == fluxppParser::T__8)) {
             antlrcpp::downCast<MultiplicativeContext *>(_localctx)->op = _errHandler->recoverInline(this);
           }
           else {
@@ -2339,7 +2402,7 @@ fluxppParser::ExprContext* fluxppParser::expr(int precedence) {
             consume();
           }
           setState(160);
-          antlrcpp::downCast<MultiplicativeContext *>(_localctx)->right = expr(18);
+          antlrcpp::downCast<MultiplicativeContext *>(_localctx)->right = expr(20);
           break;
         }
 
@@ -2350,13 +2413,13 @@ fluxppParser::ExprContext* fluxppParser::expr(int precedence) {
           pushNewRecursionContext(newContext, startState, RuleExpr);
           setState(161);
 
-          if (!(precpred(_ctx, 16))) throw FailedPredicateException(this, "precpred(_ctx, 16)");
+          if (!(precpred(_ctx, 18))) throw FailedPredicateException(this, "precpred(_ctx, 18)");
           setState(162);
           antlrcpp::downCast<AdditiveContext *>(_localctx)->op = _input->LT(1);
           _la = _input->LA(1);
           if (!(_la == fluxppParser::T__6
 
-          || _la == fluxppParser::T__10)) {
+          || _la == fluxppParser::T__9)) {
             antlrcpp::downCast<AdditiveContext *>(_localctx)->op = _errHandler->recoverInline(this);
           }
           else {
@@ -2364,7 +2427,7 @@ fluxppParser::ExprContext* fluxppParser::expr(int precedence) {
             consume();
           }
           setState(163);
-          antlrcpp::downCast<AdditiveContext *>(_localctx)->right = expr(17);
+          antlrcpp::downCast<AdditiveContext *>(_localctx)->right = expr(19);
           break;
         }
 
@@ -2375,13 +2438,13 @@ fluxppParser::ExprContext* fluxppParser::expr(int precedence) {
           pushNewRecursionContext(newContext, startState, RuleExpr);
           setState(164);
 
-          if (!(precpred(_ctx, 15))) throw FailedPredicateException(this, "precpred(_ctx, 15)");
+          if (!(precpred(_ctx, 17))) throw FailedPredicateException(this, "precpred(_ctx, 17)");
           setState(165);
           antlrcpp::downCast<ChainedComparisonAscendingContext *>(_localctx)->opleft = _input->LT(1);
           _la = _input->LA(1);
-          if (!(_la == fluxppParser::T__11
+          if (!(_la == fluxppParser::T__10
 
-          || _la == fluxppParser::T__12)) {
+          || _la == fluxppParser::T__11)) {
             antlrcpp::downCast<ChainedComparisonAscendingContext *>(_localctx)->opleft = _errHandler->recoverInline(this);
           }
           else {
@@ -2393,9 +2456,9 @@ fluxppParser::ExprContext* fluxppParser::expr(int precedence) {
           setState(167);
           antlrcpp::downCast<ChainedComparisonAscendingContext *>(_localctx)->opright = _input->LT(1);
           _la = _input->LA(1);
-          if (!(_la == fluxppParser::T__11
+          if (!(_la == fluxppParser::T__10
 
-          || _la == fluxppParser::T__12)) {
+          || _la == fluxppParser::T__11)) {
             antlrcpp::downCast<ChainedComparisonAscendingContext *>(_localctx)->opright = _errHandler->recoverInline(this);
           }
           else {
@@ -2403,7 +2466,7 @@ fluxppParser::ExprContext* fluxppParser::expr(int precedence) {
             consume();
           }
           setState(168);
-          antlrcpp::downCast<ChainedComparisonAscendingContext *>(_localctx)->right = expr(16);
+          antlrcpp::downCast<ChainedComparisonAscendingContext *>(_localctx)->right = expr(18);
           break;
         }
 
@@ -2414,13 +2477,13 @@ fluxppParser::ExprContext* fluxppParser::expr(int precedence) {
           pushNewRecursionContext(newContext, startState, RuleExpr);
           setState(170);
 
-          if (!(precpred(_ctx, 14))) throw FailedPredicateException(this, "precpred(_ctx, 14)");
+          if (!(precpred(_ctx, 16))) throw FailedPredicateException(this, "precpred(_ctx, 16)");
           setState(171);
           antlrcpp::downCast<ChainedComparisonDescendingContext *>(_localctx)->opleft = _input->LT(1);
           _la = _input->LA(1);
-          if (!(_la == fluxppParser::T__13
+          if (!(_la == fluxppParser::T__12
 
-          || _la == fluxppParser::T__14)) {
+          || _la == fluxppParser::T__13)) {
             antlrcpp::downCast<ChainedComparisonDescendingContext *>(_localctx)->opleft = _errHandler->recoverInline(this);
           }
           else {
@@ -2432,9 +2495,9 @@ fluxppParser::ExprContext* fluxppParser::expr(int precedence) {
           setState(173);
           antlrcpp::downCast<ChainedComparisonDescendingContext *>(_localctx)->opright = _input->LT(1);
           _la = _input->LA(1);
-          if (!(_la == fluxppParser::T__13
+          if (!(_la == fluxppParser::T__12
 
-          || _la == fluxppParser::T__14)) {
+          || _la == fluxppParser::T__13)) {
             antlrcpp::downCast<ChainedComparisonDescendingContext *>(_localctx)->opright = _errHandler->recoverInline(this);
           }
           else {
@@ -2442,7 +2505,7 @@ fluxppParser::ExprContext* fluxppParser::expr(int precedence) {
             consume();
           }
           setState(174);
-          antlrcpp::downCast<ChainedComparisonDescendingContext *>(_localctx)->right = expr(15);
+          antlrcpp::downCast<ChainedComparisonDescendingContext *>(_localctx)->right = expr(17);
           break;
         }
 
@@ -2453,12 +2516,13 @@ fluxppParser::ExprContext* fluxppParser::expr(int precedence) {
           pushNewRecursionContext(newContext, startState, RuleExpr);
           setState(176);
 
-          if (!(precpred(_ctx, 13))) throw FailedPredicateException(this, "precpred(_ctx, 13)");
+          if (!(precpred(_ctx, 15))) throw FailedPredicateException(this, "precpred(_ctx, 15)");
           setState(177);
           antlrcpp::downCast<ComparisonContext *>(_localctx)->op = _input->LT(1);
           _la = _input->LA(1);
-          if (!((((_la & ~ 0x3fULL) == 0) &&
-            ((1ULL << _la) & 258048) != 0))) {
+          if (!(_la == fluxppParser::T__14
+
+          || _la == fluxppParser::T__15)) {
             antlrcpp::downCast<ComparisonContext *>(_localctx)->op = _errHandler->recoverInline(this);
           }
           else {
@@ -2466,55 +2530,105 @@ fluxppParser::ExprContext* fluxppParser::expr(int precedence) {
             consume();
           }
           setState(178);
-          antlrcpp::downCast<ComparisonContext *>(_localctx)->right = expr(14);
+          antlrcpp::downCast<ComparisonContext *>(_localctx)->right = expr(16);
           break;
         }
 
         case 7: {
-          auto newContext = _tracker.createInstance<LogicalAndContext>(_tracker.createInstance<ExprContext>(parentContext, parentState));
+          auto newContext = _tracker.createInstance<LessInequalContext>(_tracker.createInstance<ExprContext>(parentContext, parentState));
           _localctx = newContext;
           newContext->left = previousContext;
           pushNewRecursionContext(newContext, startState, RuleExpr);
           setState(179);
 
-          if (!(precpred(_ctx, 12))) throw FailedPredicateException(this, "precpred(_ctx, 12)");
+          if (!(precpred(_ctx, 14))) throw FailedPredicateException(this, "precpred(_ctx, 14)");
           setState(180);
-          antlrcpp::downCast<LogicalAndContext *>(_localctx)->op = match(fluxppParser::AND);
+          antlrcpp::downCast<LessInequalContext *>(_localctx)->op = _input->LT(1);
+          _la = _input->LA(1);
+          if (!(_la == fluxppParser::T__10
+
+          || _la == fluxppParser::T__11)) {
+            antlrcpp::downCast<LessInequalContext *>(_localctx)->op = _errHandler->recoverInline(this);
+          }
+          else {
+            _errHandler->reportMatch(this);
+            consume();
+          }
           setState(181);
-          antlrcpp::downCast<LogicalAndContext *>(_localctx)->right = expr(13);
+          antlrcpp::downCast<LessInequalContext *>(_localctx)->right = expr(15);
           break;
         }
 
         case 8: {
-          auto newContext = _tracker.createInstance<LogicalOrContext>(_tracker.createInstance<ExprContext>(parentContext, parentState));
+          auto newContext = _tracker.createInstance<GreaterInequalContext>(_tracker.createInstance<ExprContext>(parentContext, parentState));
           _localctx = newContext;
           newContext->left = previousContext;
           pushNewRecursionContext(newContext, startState, RuleExpr);
           setState(182);
 
-          if (!(precpred(_ctx, 11))) throw FailedPredicateException(this, "precpred(_ctx, 11)");
+          if (!(precpred(_ctx, 13))) throw FailedPredicateException(this, "precpred(_ctx, 13)");
           setState(183);
-          antlrcpp::downCast<LogicalOrContext *>(_localctx)->op = match(fluxppParser::OR);
+          antlrcpp::downCast<GreaterInequalContext *>(_localctx)->op = _input->LT(1);
+          _la = _input->LA(1);
+          if (!(_la == fluxppParser::T__12
+
+          || _la == fluxppParser::T__13)) {
+            antlrcpp::downCast<GreaterInequalContext *>(_localctx)->op = _errHandler->recoverInline(this);
+          }
+          else {
+            _errHandler->reportMatch(this);
+            consume();
+          }
           setState(184);
-          antlrcpp::downCast<LogicalOrContext *>(_localctx)->right = expr(12);
+          antlrcpp::downCast<GreaterInequalContext *>(_localctx)->right = expr(14);
           break;
         }
 
         case 9: {
+          auto newContext = _tracker.createInstance<LogicalAndContext>(_tracker.createInstance<ExprContext>(parentContext, parentState));
+          _localctx = newContext;
+          newContext->left = previousContext;
+          pushNewRecursionContext(newContext, startState, RuleExpr);
+          setState(185);
+
+          if (!(precpred(_ctx, 12))) throw FailedPredicateException(this, "precpred(_ctx, 12)");
+          setState(186);
+          antlrcpp::downCast<LogicalAndContext *>(_localctx)->op = match(fluxppParser::AND);
+          setState(187);
+          antlrcpp::downCast<LogicalAndContext *>(_localctx)->right = expr(13);
+          break;
+        }
+
+        case 10: {
+          auto newContext = _tracker.createInstance<LogicalOrContext>(_tracker.createInstance<ExprContext>(parentContext, parentState));
+          _localctx = newContext;
+          newContext->left = previousContext;
+          pushNewRecursionContext(newContext, startState, RuleExpr);
+          setState(188);
+
+          if (!(precpred(_ctx, 11))) throw FailedPredicateException(this, "precpred(_ctx, 11)");
+          setState(189);
+          antlrcpp::downCast<LogicalOrContext *>(_localctx)->op = match(fluxppParser::OR);
+          setState(190);
+          antlrcpp::downCast<LogicalOrContext *>(_localctx)->right = expr(12);
+          break;
+        }
+
+        case 11: {
           auto newContext = _tracker.createInstance<TernaryContext>(_tracker.createInstance<ExprContext>(parentContext, parentState));
           _localctx = newContext;
           newContext->trueExpr = previousContext;
           pushNewRecursionContext(newContext, startState, RuleExpr);
-          setState(185);
+          setState(191);
 
           if (!(precpred(_ctx, 10))) throw FailedPredicateException(this, "precpred(_ctx, 10)");
-          setState(186);
+          setState(192);
           match(fluxppParser::IF);
-          setState(187);
+          setState(193);
           antlrcpp::downCast<TernaryContext *>(_localctx)->cond = expr(0);
-          setState(188);
+          setState(194);
           match(fluxppParser::ELSE);
-          setState(189);
+          setState(195);
           antlrcpp::downCast<TernaryContext *>(_localctx)->falseExpr = expr(10);
           break;
         }
@@ -2523,7 +2637,7 @@ fluxppParser::ExprContext* fluxppParser::expr(int precedence) {
           break;
         } 
       }
-      setState(195);
+      setState(201);
       _errHandler->sync(this);
       alt = getInterpreter<atn::ParserATNSimulator>()->adaptivePredict(_input, 7, _ctx);
     }
@@ -2589,17 +2703,17 @@ fluxppParser::ArgsContext* fluxppParser::args() {
   });
   try {
     enterOuterAlt(_localctx, 1);
-    setState(196);
+    setState(202);
     expr(0);
-    setState(201);
+    setState(207);
     _errHandler->sync(this);
     _la = _input->LA(1);
     while (_la == fluxppParser::T__1) {
-      setState(197);
-      match(fluxppParser::T__1);
-      setState(198);
-      expr(0);
       setState(203);
+      match(fluxppParser::T__1);
+      setState(204);
+      expr(0);
+      setState(209);
       _errHandler->sync(this);
       _la = _input->LA(1);
     }
@@ -2626,15 +2740,17 @@ bool fluxppParser::sempred(RuleContext *context, size_t ruleIndex, size_t predic
 
 bool fluxppParser::exprSempred(ExprContext *_localctx, size_t predicateIndex) {
   switch (predicateIndex) {
-    case 0: return precpred(_ctx, 20);
-    case 1: return precpred(_ctx, 17);
-    case 2: return precpred(_ctx, 16);
-    case 3: return precpred(_ctx, 15);
-    case 4: return precpred(_ctx, 14);
-    case 5: return precpred(_ctx, 13);
-    case 6: return precpred(_ctx, 12);
-    case 7: return precpred(_ctx, 11);
-    case 8: return precpred(_ctx, 10);
+    case 0: return precpred(_ctx, 22);
+    case 1: return precpred(_ctx, 19);
+    case 2: return precpred(_ctx, 18);
+    case 3: return precpred(_ctx, 17);
+    case 4: return precpred(_ctx, 16);
+    case 5: return precpred(_ctx, 15);
+    case 6: return precpred(_ctx, 14);
+    case 7: return precpred(_ctx, 13);
+    case 8: return precpred(_ctx, 12);
+    case 9: return precpred(_ctx, 11);
+    case 10: return precpred(_ctx, 10);
 
   default:
     break;

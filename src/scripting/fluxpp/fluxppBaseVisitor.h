@@ -71,10 +71,6 @@ public:
     return visitChildren(ctx);
   }
 
-  virtual std::any visitTernary(fluxppParser::TernaryContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
   virtual std::any visitParens(fluxppParser::ParensContext *ctx) override {
     return visitChildren(ctx);
   }
@@ -87,15 +83,7 @@ public:
     return visitChildren(ctx);
   }
 
-  virtual std::any visitChainedComparisonAscending(fluxppParser::ChainedComparisonAscendingContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
   virtual std::any visitDateTime(fluxppParser::DateTimeContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual std::any visitDate(fluxppParser::DateContext *ctx) override {
     return visitChildren(ctx);
   }
 
@@ -123,6 +111,10 @@ public:
     return visitChildren(ctx);
   }
 
+  virtual std::any visitLessInequal(fluxppParser::LessInequalContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
   virtual std::any visitAbs(fluxppParser::AbsContext *ctx) override {
     return visitChildren(ctx);
   }
@@ -132,10 +124,6 @@ public:
   }
 
   virtual std::any visitNumber(fluxppParser::NumberContext *ctx) override {
-    return visitChildren(ctx);
-  }
-
-  virtual std::any visitStringLiteral(fluxppParser::StringLiteralContext *ctx) override {
     return visitChildren(ctx);
   }
 
@@ -152,6 +140,26 @@ public:
   }
 
   virtual std::any visitFunctionCall(fluxppParser::FunctionCallContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitTernary(fluxppParser::TernaryContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitChainedComparisonAscending(fluxppParser::ChainedComparisonAscendingContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitDate(fluxppParser::DateContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitGreaterInequal(fluxppParser::GreaterInequalContext *ctx) override {
+    return visitChildren(ctx);
+  }
+
+  virtual std::any visitStringLiteral(fluxppParser::StringLiteralContext *ctx) override {
     return visitChildren(ctx);
   }
 

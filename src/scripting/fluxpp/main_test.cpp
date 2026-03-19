@@ -40,6 +40,13 @@ int main() {
     catch (const std::bad_any_cast& e) {
     }
 
+    std::vector<int> a = {1, 2, 3 , 4, 5};
+    std::vector<int> b = {91, 92, 93, 94, 95, 96, 97, 98, 99};
+
+    std::ranges::copy(a, b.begin());
+    for (const auto x : b) {
+        std::cout << x << ", ";
+    }
 
     if (engine_ptr->hasErrors() || engine_ptr->hasWarnings()) {
         engine_ptr->printAll(std::cout);

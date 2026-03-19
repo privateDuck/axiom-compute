@@ -7,6 +7,53 @@
 #include "EigenDefinitions.hpp"
 
 namespace scripting::fluxpp {
+
+    using _Storage = std::vector<double, Eigen::aligned_allocator<double>>;
+    using VectorXi64 = Eigen::Matrix<int64_t, Eigen::Dynamic, 1>;
+    struct ConstEval {
+        double data;
+        uint16_t location;
+        Type type;
+        bool isVector;
+        bool isNull;
+
+        explicit ConstEval(const Type type_) : data(0.0), location(0), type(type_), isVector(false), isNull(false) {}
+
+        void SetTimeStamp(const TimeStampAlignType ts) {
+            data = std::bit_cast<double>(ts);
+        }
+
+        void SetReal(const double val) {
+            data = val;
+        }
+
+        void SetBool(const bool val) {
+            data = std::bit_cast<double>(val ? static_cast<int64_t>(1) : static_cast<int64_t>(0));
+        }
+
+        void SetStringIndex(const uint16_t index) {
+            data = std::bit_cast<double>(static_cast<int64_t>(index));
+        }
+
+        void SetAsVector(const uint16_t loc) {
+            location = loc;
+            isVector = true;
+        }
+
+        [[nodiscard]] double asRealScalar() const {
+            return data;
+        }
+        [[nodiscard]] TimeStampAlignType asTimeStampScalar() const {
+            return std::bit_cast<TimeStampAlignType>(data);
+        }
+        [[nodiscard]] bool asBoolScalar() const {
+            return std::bit_cast<int64_t>(data) != 0;
+        }
+        [[nodiscard]] int64_t asIntScalar() const {
+            return std::bit_cast<int64_t>(data);
+        }
+    };
+
     using ValueType = std::variant<EigenColDoubleVec, double>;
     template<class... Ts> struct Overloaded : Ts... { using Ts::operator()...; };
     template<class... Ts> Overloaded(Ts...) -> Overloaded<Ts...>;

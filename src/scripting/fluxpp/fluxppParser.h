@@ -14,12 +14,12 @@ public:
   enum {
     T__0 = 1, T__1 = 2, T__2 = 3, T__3 = 4, T__4 = 5, T__5 = 6, T__6 = 7, 
     T__7 = 8, T__8 = 9, T__9 = 10, T__10 = 11, T__11 = 12, T__12 = 13, T__13 = 14, 
-    T__14 = 15, T__15 = 16, T__16 = 17, AS = 18, AND = 19, ELSE = 20, DROP = 21, 
-    LET = 22, CREATE = 23, KEEP = 24, REMOVE = 25, CLAMP = 26, SET = 27, 
-    RENAME = 28, FILL = 29, ASSERT = 30, WITH = 31, OR = 32, NOT = 33, IF = 34, 
-    IN = 35, FROM = 36, TO = 37, NULL_ = 38, TRUE = 39, FALSE = 40, ISO_DATETIME = 41, 
-    ISO_DATE = 42, ISO_TIME = 43, NUMBER = 44, STRING_LITERAL = 45, UNTERMINATED_STRING_LITERAL = 46, 
-    ID = 47, ENDLINE = 48, NEWLINE = 49, WS = 50, BLOCK_COMMENT = 51, LINE_COMMENT = 52
+    T__14 = 15, T__15 = 16, AS = 17, AND = 18, ELSE = 19, DROP = 20, LET = 21, 
+    CREATE = 22, KEEP = 23, REMOVE = 24, CLAMP = 25, SET = 26, RENAME = 27, 
+    FILL = 28, ASSERT = 29, WITH = 30, OR = 31, NOT = 32, IF = 33, IN = 34, 
+    FROM = 35, TO = 36, NULL_ = 37, TRUE = 38, FALSE = 39, ISO_DATETIME = 40, 
+    ISO_DATE = 41, ISO_TIME = 42, NUMBER = 43, STRING_LITERAL = 44, UNTERMINATED_STRING_LITERAL = 45, 
+    ID = 46, ENDLINE = 47, NEWLINE = 48, WS = 49, BLOCK_COMMENT = 50, LINE_COMMENT = 51
   };
 
   enum {
@@ -330,6 +330,7 @@ public:
 
   class  ExprContext : public antlr4::ParserRuleContext {
   public:
+    int type = 0;
     ExprContext(antlr4::ParserRuleContext *parent, size_t invokingState);
    
     ExprContext() = default;
@@ -339,23 +340,6 @@ public:
     virtual size_t getRuleIndex() const override;
 
    
-  };
-
-  class  TernaryContext : public ExprContext {
-  public:
-    TernaryContext(ExprContext *ctx);
-
-    fluxppParser::ExprContext *trueExpr = nullptr;
-    fluxppParser::ExprContext *cond = nullptr;
-    fluxppParser::ExprContext *falseExpr = nullptr;
-    antlr4::tree::TerminalNode *IF();
-    antlr4::tree::TerminalNode *ELSE();
-    std::vector<ExprContext *> expr();
-    ExprContext* expr(size_t i);
-    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
-    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
-
-    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
 
   class  ParensContext : public ExprContext {
@@ -395,39 +379,11 @@ public:
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
 
-  class  ChainedComparisonAscendingContext : public ExprContext {
-  public:
-    ChainedComparisonAscendingContext(ExprContext *ctx);
-
-    fluxppParser::ExprContext *left = nullptr;
-    antlr4::Token *opleft = nullptr;
-    fluxppParser::ExprContext *middle = nullptr;
-    antlr4::Token *opright = nullptr;
-    fluxppParser::ExprContext *right = nullptr;
-    std::vector<ExprContext *> expr();
-    ExprContext* expr(size_t i);
-    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
-    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
-
-    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
-  };
-
   class  DateTimeContext : public ExprContext {
   public:
     DateTimeContext(ExprContext *ctx);
 
     antlr4::tree::TerminalNode *ISO_DATETIME();
-    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
-    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
-
-    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
-  };
-
-  class  DateContext : public ExprContext {
-  public:
-    DateContext(ExprContext *ctx);
-
-    antlr4::tree::TerminalNode *ISO_DATE();
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
 
@@ -520,6 +476,21 @@ public:
     virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
   };
 
+  class  LessInequalContext : public ExprContext {
+  public:
+    LessInequalContext(ExprContext *ctx);
+
+    fluxppParser::ExprContext *left = nullptr;
+    antlr4::Token *op = nullptr;
+    fluxppParser::ExprContext *right = nullptr;
+    std::vector<ExprContext *> expr();
+    ExprContext* expr(size_t i);
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
   class  AbsContext : public ExprContext {
   public:
     AbsContext(ExprContext *ctx);
@@ -547,17 +518,6 @@ public:
     NumberContext(ExprContext *ctx);
 
     antlr4::tree::TerminalNode *NUMBER();
-    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
-    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
-
-    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
-  };
-
-  class  StringLiteralContext : public ExprContext {
-  public:
-    StringLiteralContext(ExprContext *ctx);
-
-    antlr4::tree::TerminalNode *STRING_LITERAL();
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
 
@@ -613,6 +573,77 @@ public:
     antlr4::Token *function = nullptr;
     ArgsContext *args();
     antlr4::tree::TerminalNode *ID();
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  TernaryContext : public ExprContext {
+  public:
+    TernaryContext(ExprContext *ctx);
+
+    fluxppParser::ExprContext *trueExpr = nullptr;
+    fluxppParser::ExprContext *cond = nullptr;
+    fluxppParser::ExprContext *falseExpr = nullptr;
+    antlr4::tree::TerminalNode *IF();
+    antlr4::tree::TerminalNode *ELSE();
+    std::vector<ExprContext *> expr();
+    ExprContext* expr(size_t i);
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  ChainedComparisonAscendingContext : public ExprContext {
+  public:
+    ChainedComparisonAscendingContext(ExprContext *ctx);
+
+    fluxppParser::ExprContext *left = nullptr;
+    antlr4::Token *opleft = nullptr;
+    fluxppParser::ExprContext *middle = nullptr;
+    antlr4::Token *opright = nullptr;
+    fluxppParser::ExprContext *right = nullptr;
+    std::vector<ExprContext *> expr();
+    ExprContext* expr(size_t i);
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  DateContext : public ExprContext {
+  public:
+    DateContext(ExprContext *ctx);
+
+    antlr4::tree::TerminalNode *ISO_DATE();
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  GreaterInequalContext : public ExprContext {
+  public:
+    GreaterInequalContext(ExprContext *ctx);
+
+    fluxppParser::ExprContext *left = nullptr;
+    antlr4::Token *op = nullptr;
+    fluxppParser::ExprContext *right = nullptr;
+    std::vector<ExprContext *> expr();
+    ExprContext* expr(size_t i);
+    virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
+    virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
+
+    virtual std::any accept(antlr4::tree::ParseTreeVisitor *visitor) override;
+  };
+
+  class  StringLiteralContext : public ExprContext {
+  public:
+    StringLiteralContext(ExprContext *ctx);
+
+    antlr4::tree::TerminalNode *STRING_LITERAL();
     virtual void enterRule(antlr4::tree::ParseTreeListener *listener) override;
     virtual void exitRule(antlr4::tree::ParseTreeListener *listener) override;
 

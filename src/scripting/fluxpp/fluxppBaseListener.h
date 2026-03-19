@@ -58,9 +58,6 @@ public:
   virtual void enterAssert_statement(fluxppParser::Assert_statementContext * /*ctx*/) override { }
   virtual void exitAssert_statement(fluxppParser::Assert_statementContext * /*ctx*/) override { }
 
-  virtual void enterTernary(fluxppParser::TernaryContext * /*ctx*/) override { }
-  virtual void exitTernary(fluxppParser::TernaryContext * /*ctx*/) override { }
-
   virtual void enterParens(fluxppParser::ParensContext * /*ctx*/) override { }
   virtual void exitParens(fluxppParser::ParensContext * /*ctx*/) override { }
 
@@ -70,14 +67,8 @@ public:
   virtual void enterExponentiation(fluxppParser::ExponentiationContext * /*ctx*/) override { }
   virtual void exitExponentiation(fluxppParser::ExponentiationContext * /*ctx*/) override { }
 
-  virtual void enterChainedComparisonAscending(fluxppParser::ChainedComparisonAscendingContext * /*ctx*/) override { }
-  virtual void exitChainedComparisonAscending(fluxppParser::ChainedComparisonAscendingContext * /*ctx*/) override { }
-
   virtual void enterDateTime(fluxppParser::DateTimeContext * /*ctx*/) override { }
   virtual void exitDateTime(fluxppParser::DateTimeContext * /*ctx*/) override { }
-
-  virtual void enterDate(fluxppParser::DateContext * /*ctx*/) override { }
-  virtual void exitDate(fluxppParser::DateContext * /*ctx*/) override { }
 
   virtual void enterLogicalOr(fluxppParser::LogicalOrContext * /*ctx*/) override { }
   virtual void exitLogicalOr(fluxppParser::LogicalOrContext * /*ctx*/) override { }
@@ -97,6 +88,9 @@ public:
   virtual void enterAdditive(fluxppParser::AdditiveContext * /*ctx*/) override { }
   virtual void exitAdditive(fluxppParser::AdditiveContext * /*ctx*/) override { }
 
+  virtual void enterLessInequal(fluxppParser::LessInequalContext * /*ctx*/) override { }
+  virtual void exitLessInequal(fluxppParser::LessInequalContext * /*ctx*/) override { }
+
   virtual void enterAbs(fluxppParser::AbsContext * /*ctx*/) override { }
   virtual void exitAbs(fluxppParser::AbsContext * /*ctx*/) override { }
 
@@ -105,9 +99,6 @@ public:
 
   virtual void enterNumber(fluxppParser::NumberContext * /*ctx*/) override { }
   virtual void exitNumber(fluxppParser::NumberContext * /*ctx*/) override { }
-
-  virtual void enterStringLiteral(fluxppParser::StringLiteralContext * /*ctx*/) override { }
-  virtual void exitStringLiteral(fluxppParser::StringLiteralContext * /*ctx*/) override { }
 
   virtual void enterTrueLiteral(fluxppParser::TrueLiteralContext * /*ctx*/) override { }
   virtual void exitTrueLiteral(fluxppParser::TrueLiteralContext * /*ctx*/) override { }
@@ -120,6 +111,21 @@ public:
 
   virtual void enterFunctionCall(fluxppParser::FunctionCallContext * /*ctx*/) override { }
   virtual void exitFunctionCall(fluxppParser::FunctionCallContext * /*ctx*/) override { }
+
+  virtual void enterTernary(fluxppParser::TernaryContext * /*ctx*/) override { }
+  virtual void exitTernary(fluxppParser::TernaryContext * /*ctx*/) override { }
+
+  virtual void enterChainedComparisonAscending(fluxppParser::ChainedComparisonAscendingContext * /*ctx*/) override { }
+  virtual void exitChainedComparisonAscending(fluxppParser::ChainedComparisonAscendingContext * /*ctx*/) override { }
+
+  virtual void enterDate(fluxppParser::DateContext * /*ctx*/) override { }
+  virtual void exitDate(fluxppParser::DateContext * /*ctx*/) override { }
+
+  virtual void enterGreaterInequal(fluxppParser::GreaterInequalContext * /*ctx*/) override { }
+  virtual void exitGreaterInequal(fluxppParser::GreaterInequalContext * /*ctx*/) override { }
+
+  virtual void enterStringLiteral(fluxppParser::StringLiteralContext * /*ctx*/) override { }
+  virtual void exitStringLiteral(fluxppParser::StringLiteralContext * /*ctx*/) override { }
 
   virtual void enterNegate(fluxppParser::NegateContext * /*ctx*/) override { }
   virtual void exitNegate(fluxppParser::NegateContext * /*ctx*/) override { }

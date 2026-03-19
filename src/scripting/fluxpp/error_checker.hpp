@@ -10,22 +10,10 @@
 #include "types.hpp"
 #include "ComputeFrame.hpp"
 #include "functions.hpp"
+#include "immutable.hpp"
 
 namespace scripting::fluxpp {
     class StaticAnalyzer : public fluxppBaseVisitor {
-        struct Immutable {
-            std::string id;
-            Type type;
-            bool isVector = false;
-            uint32_t line = 0;
-
-            Immutable(std::string id, const Type type, const bool isVec, const uint64_t line)
-                : id(std::move(id)), type(type), isVector(isVec), line(line) {}
-
-            bool operator==(const Immutable& other) const {
-                return id == other.id && type == other.type && isVector == other.isVector;
-            }
-        };
 
         struct Returns {
             Type type;
@@ -41,15 +29,6 @@ namespace scripting::fluxpp {
         struct Args {
             size_t args;
             bool ifAnyVector;
-        };
-
-        struct ImmutableHasher {
-            size_t operator()(const Immutable& p) const noexcept {
-                size_t h1 = std::hash<std::string>{}(p.id);
-                h1 ^= (std::hash<fluxpp::Type>{}(p.type) << 1);
-                h1 ^= (std::hash<bool>{}(p.isVector) << 1);
-                return h1;
-            }
         };
 
     public:
@@ -528,7 +507,8 @@ namespace scripting::fluxpp {
         std::any visitIdentifier(fluxppParser::IdentifierContext *ctx) override {
             const std::string id = ctx->ID()->getText();
             if (immutables.contains(id)) {
-                const auto& imm = immutables.at(id);
+                auto& imm = immutables.at(id);
+                imm.is_used = true;
                 return Returns(imm.type, imm.isVector);
             }
             if (df->HasColumn(id)) {
@@ -567,22 +547,57 @@ namespace scripting::fluxpp {
                 .expected("Both operands must evaluate to the same type");
                 return 0;
             }
-            if (op != "==" && op != "!=") {
-                // Comparison operators can only be applied to real type
-                if (!supportsComparisons(left.type)) {
-                    engine->report(ErrorCode::TYP002_UNSUPPORTED_TYPE_FOR_OP)
-                    .at(ctx->left)
-                    .what("Operator only supports real valued or timestamp operands")
-                    .found(to_string(left.type));
-                    return 0;
-                }
-                if (!supportsComparisons(right.type)) {
-                    engine->report(ErrorCode::TYP002_UNSUPPORTED_TYPE_FOR_OP)
-                    .at(ctx->right)
-                    .what("Operator only supports real valued or timestamp operands")
-                    .found(to_string(right.type));
-                    return 0;
-                }
+            return Returns(Type::TBOOL, left.isVector || right.isVector);
+        }
+
+        std::any visitLessInequal(fluxppParser::LessInequalContext *ctx) override {
+            const auto left = std::any_cast<Returns>(visit(ctx->left));
+            const auto right = std::any_cast<Returns>(visit(ctx->right));
+            if (left.type != right.type) {
+                engine->report(ErrorCode::TYP001_TYPE_MISMATCH)
+                .at(ctx->op)
+                .expected("Both operands must evaluate to the same type");
+                return 0;
+            }
+            if (!supportsComparisons(left.type)) {
+                engine->report(ErrorCode::TYP002_UNSUPPORTED_TYPE_FOR_OP)
+                .at(ctx->left)
+                .what("Operator only supports real valued or timestamp operands")
+                .found(to_string(left.type));
+                return 0;
+            }
+            if (!supportsComparisons(right.type)) {
+                engine->report(ErrorCode::TYP002_UNSUPPORTED_TYPE_FOR_OP)
+                .at(ctx->right)
+                .what("Operator only supports real valued or timestamp operands")
+                .found(to_string(right.type));
+                return 0;
+            }
+            return Returns(Type::TBOOL, left.isVector || right.isVector);
+        }
+
+        std::any visitGreaterInequal(fluxppParser::GreaterInequalContext *ctx) override {
+            const auto left = std::any_cast<Returns>(visit(ctx->left));
+            const auto right = std::any_cast<Returns>(visit(ctx->right));
+            if (left.type != right.type) {
+                engine->report(ErrorCode::TYP001_TYPE_MISMATCH)
+                .at(ctx->op)
+                .expected("Both operands must evaluate to the same type");
+                return 0;
+            }
+            if (!supportsComparisons(left.type)) {
+                engine->report(ErrorCode::TYP002_UNSUPPORTED_TYPE_FOR_OP)
+                .at(ctx->left)
+                .what("Operator only supports real valued or timestamp operands")
+                .found(to_string(left.type));
+                return 0;
+            }
+            if (!supportsComparisons(right.type)) {
+                engine->report(ErrorCode::TYP002_UNSUPPORTED_TYPE_FOR_OP)
+                .at(ctx->right)
+                .what("Operator only supports real valued or timestamp operands")
+                .found(to_string(right.type));
+                return 0;
             }
             return Returns(Type::TBOOL, left.isVector || right.isVector);
         }

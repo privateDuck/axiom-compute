@@ -47,19 +47,13 @@ public:
 
     virtual std::any visitAssert_statement(fluxppParser::Assert_statementContext *context) = 0;
 
-    virtual std::any visitTernary(fluxppParser::TernaryContext *context) = 0;
-
     virtual std::any visitParens(fluxppParser::ParensContext *context) = 0;
 
     virtual std::any visitTime(fluxppParser::TimeContext *context) = 0;
 
     virtual std::any visitExponentiation(fluxppParser::ExponentiationContext *context) = 0;
 
-    virtual std::any visitChainedComparisonAscending(fluxppParser::ChainedComparisonAscendingContext *context) = 0;
-
     virtual std::any visitDateTime(fluxppParser::DateTimeContext *context) = 0;
-
-    virtual std::any visitDate(fluxppParser::DateContext *context) = 0;
 
     virtual std::any visitLogicalOr(fluxppParser::LogicalOrContext *context) = 0;
 
@@ -73,13 +67,13 @@ public:
 
     virtual std::any visitAdditive(fluxppParser::AdditiveContext *context) = 0;
 
+    virtual std::any visitLessInequal(fluxppParser::LessInequalContext *context) = 0;
+
     virtual std::any visitAbs(fluxppParser::AbsContext *context) = 0;
 
     virtual std::any visitIdentifier(fluxppParser::IdentifierContext *context) = 0;
 
     virtual std::any visitNumber(fluxppParser::NumberContext *context) = 0;
-
-    virtual std::any visitStringLiteral(fluxppParser::StringLiteralContext *context) = 0;
 
     virtual std::any visitTrueLiteral(fluxppParser::TrueLiteralContext *context) = 0;
 
@@ -88,6 +82,16 @@ public:
     virtual std::any visitLogicalAnd(fluxppParser::LogicalAndContext *context) = 0;
 
     virtual std::any visitFunctionCall(fluxppParser::FunctionCallContext *context) = 0;
+
+    virtual std::any visitTernary(fluxppParser::TernaryContext *context) = 0;
+
+    virtual std::any visitChainedComparisonAscending(fluxppParser::ChainedComparisonAscendingContext *context) = 0;
+
+    virtual std::any visitDate(fluxppParser::DateContext *context) = 0;
+
+    virtual std::any visitGreaterInequal(fluxppParser::GreaterInequalContext *context) = 0;
+
+    virtual std::any visitStringLiteral(fluxppParser::StringLiteralContext *context) = 0;
 
     virtual std::any visitNegate(fluxppParser::NegateContext *context) = 0;
 
