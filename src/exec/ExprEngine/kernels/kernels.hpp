@@ -152,4 +152,19 @@ namespace kernels {
 
     void xor_i64(const int64_t* src1, const int64_t* src2, int64_t* dst, size_t n);
     void xori_i64(const int64_t* src1, int64_t src2, int64_t* dst, size_t n);
+
+
+    int64_t get_days_since_epoch(const int64_t* ts);
+    int64_t get_seconds_of_day(const int64_t* ts);
+
+    int64_t get_year(const int64_t* ts);
+    int64_t get_month(const int64_t* ts);
+    int64_t get_day(const int64_t* ts);
+    int64_t get_hour(const int64_t* ts);
+    int64_t get_minute(const int64_t* ts);
+    int64_t get_second(const int64_t* ts);
+    int64_t get_day_of_year(const int64_t* ts);
+    int64_t get_week_of_year(const int64_t* ts);
+    int64_t get_day_of_week(const int64_t* ts);
+
 }
