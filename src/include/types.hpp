@@ -10,6 +10,12 @@ enum Type : uint8_t {
     TTIMESTAMP,
 };
 
+enum SourceType : uint8_t {
+    S_LOCAL,
+    S_CLOUD_URI,
+    S_DB_CONN,
+};
+
 inline std::string_view typeName(const Type type) {
     switch (type) {
         case TREAL:

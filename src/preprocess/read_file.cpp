@@ -62,7 +62,7 @@ void ReadFile(const std::string& filename) {
 
 arrow::Result<std::shared_ptr<arrow::Table>> ScanEagerDirectory(
     const std::shared_ptr<fs::FileSystem>& filesystem,
-    const std::shared_ptr<ds::FileFormat>& format, const std::string& base_dir) {
+    const std::shared_ptr<ds::FileFormat>& format, const std::string& base_dir, const int64_t batch_size) {
 
     fs::FileSelector selector;
     selector.base_dir = base_dir;
@@ -73,7 +73,7 @@ arrow::Result<std::shared_ptr<arrow::Table>> ScanEagerDirectory(
 
     // Read the entire dataset as a Table
     ARROW_ASSIGN_OR_RAISE(const auto scan_builder, dataset->NewScan());
-    ARROW_RETURN_NOT_OK(scan_builder->BatchSize(16386));
+    ARROW_RETURN_NOT_OK(scan_builder->BatchSize(batch_size));
     ARROW_ASSIGN_OR_RAISE(const auto scanner, scan_builder->Finish());
     return scanner->ToTable();
 }
@@ -81,13 +81,14 @@ arrow::Result<std::shared_ptr<arrow::Table>> ScanEagerDirectory(
 arrow::Result<std::shared_ptr<arrow::Table>> ReadEagerFile(
     const std::shared_ptr<fs::FileSystem>& filesystem,
     const std::shared_ptr<ds::FileFormat>& format,
-    const std::string& file_path) {
+    const std::string& file_path, const int64_t batch_size) {
     ARROW_ASSIGN_OR_RAISE(const auto uri, filesystem->MakeUri(file_path));
     const auto options = ds::FileSystemFactoryOptions();
     ARROW_ASSIGN_OR_RAISE(const auto factory, ds::FileSystemDatasetFactory::Make(uri, format, options));
     ARROW_ASSIGN_OR_RAISE(const auto dataset, factory->Finish());
 
     ARROW_ASSIGN_OR_RAISE(const auto scan_builder, dataset->NewScan());
+    ARROW_RETURN_NOT_OK(scan_builder->BatchSize(batch_size));
     ARROW_ASSIGN_OR_RAISE(const auto scanner, scan_builder->Finish());
     return scanner->ToTable();
 }
