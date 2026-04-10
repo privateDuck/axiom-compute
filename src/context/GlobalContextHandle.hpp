@@ -1,32 +1,10 @@
 #pragma once
 #include <unordered_map>
-#include <queue>
-#include <atomic>
+#include "async_task.hpp"
 #include <../include/spdlog/spdlog.h>
 #include "../preprocess/preprocessor_ctx.hpp"
 
 namespace top {
-
-    enum TaskStatus : int32_t {
-        Error = -1,
-        Running = 0,
-        Success = 1,
-    };
-
-    struct alignas(16) TaskHandle {
-        uint64_t ptr;
-        int32_t id;
-        std::atomic<TaskStatus> status;
-
-        TaskHandle& operator=(const TaskHandle& rhs) {
-            ptr = rhs.ptr;
-            id = rhs.id;
-            return *this;
-        }
-        TaskHandle(const TaskHandle& rhs) : ptr(rhs.ptr), id(rhs.id), status(rhs.status.load()) {}
-        TaskHandle(const uint64_t ptr, const int32_t id, const TaskStatus status) : ptr(ptr), id(id), status(status) {}
-        TaskHandle() : ptr(0), id(0), status(Error) {}
-    };
 
     class GlobalContextHandle {
     public:
@@ -67,31 +45,37 @@ namespace top {
         }
 
         void SetTaskStatus(const int32_t id, const TaskStatus status) const {
-            tasks.at(id)->status = status;
+            tasks.at(id)->status.store(status, std::memory_order::release);
+        }
+
+        TaskStatus GetTaskStatus(const int32_t id) const {
+            return tasks.at(id)->status.load(std::memory_order::acquire);
         }
 
         void FreeTaskHandle(const int32_t id) {
             if (id < tasks.size()) {
-                const auto* task = tasks.at(id);
+                auto* task = tasks.at(id);
                 if (task->status == Running) {
                     spdlog::warn("Freeing a task handle that is still running: {}", id);
                 }
-                if (task->ptr != 0)
-                    free(reinterpret_cast<void*>(task->ptr));
                 task_free_list.push_back(id);
                 delete task;
+                tasks.at(id) = nullptr;
             }
         }
 
-        TaskHandle* PushTask(const uint64_t ptr) {
+        int32_t RequestTaskId() {
             const auto id = task_free_list.back();
             task_free_list.pop_back();
-            const auto handle = new TaskHandle{ptr, id, Running};
-            tasks[id] = handle;
-            return handle;
+            return id;
         }
 
-        void CreatePreprocessorContext(const SourceType src, const std::vector<std::string>& args) {
+        AsyncTask* PushTask(AsyncTask* task) {
+            tasks[task->id] = task;
+            return task;
+        }
+
+        void CreatePreprocessorContext(const int src, const std::vector<std::string>& args) {
             if (ppctx) delete ppctx;
             ppctx = new preprocess::PreprocessorContext();
         }
@@ -106,16 +90,14 @@ namespace top {
                 if (task->status == Running) {
                     spdlog::warn("Task {} is still running during destruction. Freeing its resources.", task->id);
                 }
-                if (task->ptr != 0)
-                    free(reinterpret_cast<void*>(task->ptr));
+                delete task;
             }
         }
 
     private:
         preprocess::PreprocessorContext* ppctx;
-        std::vector<TaskHandle*> tasks;
+        std::vector<AsyncTask*> tasks;
         std::vector<int32_t> task_free_list;
-        // std::atomic_int32_t task_id_counter{0};
     };
 
 }
