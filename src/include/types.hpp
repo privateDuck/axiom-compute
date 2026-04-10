@@ -10,13 +10,23 @@ enum Type : uint8_t {
     TTIMESTAMP,
 };
 
-enum SourceType : uint8_t {
-    S_LOCAL,
-    S_CLOUD_URI,
-    S_DB_CONN,
-};
-
 inline std::string_view typeName(const Type type) {
+    switch (type) {
+        case TREAL:
+            return "REAL";
+        case TINT:
+            return "INT";
+        case TBOOL:
+            return "BOOL";
+        case TSTRING:
+            return "STRING";
+        case TTIMESTAMP:
+            return "TIMESTAMP";
+    }
+    return "UNKNOWN";
+}
+
+inline std::string typeNameStr(const Type type) {
     switch (type) {
         case TREAL:
             return "REAL";
