@@ -2,6 +2,7 @@
 
 #include <arrow/api.h>
 #include <arrow/compute/api.h>
+#include "../context/GlobalContextHandle.hpp"
 
 namespace preprocess {
     InferParseResult try_parse_real(const std::shared_ptr<arrow::Array>& array) {
@@ -273,6 +274,21 @@ namespace preprocess {
                 res.AddAlternative(confidences[i].type, confidences[i].success_rate);
             }
         }
+
+        top::ResultBuilder builder;
+        std::vector<CValue> alts (res.alternative_count);
+        for (const auto& alt : res.alternatives) {
+            CValue alt_map = builder.MakeMap({
+                {"type", builder.MakeStr(typeName(alt.type))},
+                {"confidence", builder.MakeFloat(alt.confidence)}
+                });
+            alts.push_back(alt_map);
+        }
+        CValue full_map = builder.MakeMap({
+            {"primary_type", builder.MakeStr(typeName(res.primary_type))},
+            {"primary_confidence", builder.MakeFloat(res.primary_confidence)},
+            {"alternatives", builder.MakeList(alts)}
+        });
         return res;
     }
 

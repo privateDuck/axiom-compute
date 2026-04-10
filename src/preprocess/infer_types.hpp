@@ -14,8 +14,8 @@ namespace preprocess {
 
     struct alignas(8) TypeAlternative {
         float confidence = 0.0f;
-        Type type;
-        uint8_t _pad_[3];
+        Type type {TSTRING};
+        uint8_t _pad_[3]{};
     };
 
     struct alignas(16) ColumnTypeInference {

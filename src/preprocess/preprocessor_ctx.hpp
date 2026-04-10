@@ -1,21 +1,20 @@
 #pragma once
 
 #include <arrow/api.h>
-#include <arrow/compute/api.h>
+#include "source_validation.hpp"
 #include "infer_types.hpp"
-#include "read_file.hpp"
 
 namespace preprocess {
 
-    class PreprocessorContext {
-    public:
-        PreprocessorContext();
-        static void Validate(SourceType src, const std::vector<std::string>& args);
-    private:
+    struct PreprocessorContext {
         std::shared_ptr<arrow::Table> table;
+        int32_t step;
     };
 
-    inline PreprocessorContext::PreprocessorContext() {
-    }
-
+    PreprocessorContext* make_preprocessor_context();
+    void validate_source(SourceType source, const std::string& args);
+    void import_and_infer_types(PreprocessorContext* ctx, SourceType source, const std::string& import_args);
+    void type_cast_and_null_check(PreprocessorContext* ctx, const std::string& type_infer_map);
+    void drop_nulls_and_save(PreprocessorContext* ctx, const std::string& drop_rules, const std::string& save_location);
+    void destroy_preprocessor_context(PreprocessorContext* ctx);
 }
