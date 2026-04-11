@@ -1,10 +1,10 @@
+#include <format>
+#include <filesystem>
+#include <arrow/dataset/api.h>
+#include <arrow/filesystem/localfs.h>
 #include "source_validation.hpp"
 #include "../arrow_fn/read_dataset.hpp"
 #include "../arrow_fn/string_df.hpp"
-#include <filesystem>
-#include <format>
-#include <arrow/dataset/api.h>
-#include <arrow/filesystem/localfs.h>
 #include "../arrow_fn/DuckDBClient.hpp"
 
 namespace preprocess {
@@ -18,7 +18,7 @@ namespace preprocess {
             return arrow::Status::IOError("Unsupported file format: " + ext);
         }
         std::shared_ptr<arrow::dataset::FileFormat> format;
-        switch (ext[0]) {
+        switch (ext[1]) {
             case 'c':
                 format = std::make_shared<arrow::dataset::CsvFileFormat>();
                 break;
@@ -35,7 +35,7 @@ namespace preprocess {
                 return arrow::Status::IOError("Unsupported file format: " + ext);
         }
         ARROW_ASSIGN_OR_RAISE(const auto fs, arrow::fs::FileSystemFromUriOrPath(path));
-        ARROW_ASSIGN_OR_RAISE(const auto reader, afn::ReadLazyFile(fs, format, path));
+        ARROW_ASSIGN_OR_RAISE(const auto reader, afn::ReadLazyFile(fs, format, path, 10));
         std::shared_ptr<arrow::RecordBatch> batch;
         const auto status = reader->ReadNext(&batch);
         if (!status.ok()) {
@@ -44,7 +44,7 @@ namespace preprocess {
         if (batch == nullptr) {
             return arrow::Status::ExecutionError("No record batch found in file: " + path);
         }
-        df = afn::RowWiseStringDF(batch);
+        df.Initialize(batch);
         return arrow::Status::OK();
     }
 
@@ -71,7 +71,7 @@ namespace preprocess {
         }
         ARROW_ASSIGN_OR_RAISE(const auto fs, arrow::fs::FileSystemFromUriOrPath(base_path));
         const auto localfs = std::make_shared<arrow::fs::LocalFileSystem>();
-        ARROW_ASSIGN_OR_RAISE(const auto reader, afn::ScanLazyDirectory(fs, format, base_path));
+        ARROW_ASSIGN_OR_RAISE(const auto reader, afn::ScanLazyDirectory(fs, format, base_path, 10));
         std::shared_ptr<arrow::RecordBatch> batch;
         const auto status = reader->ReadNext(&batch);
         if (!status.ok()) {
@@ -80,7 +80,7 @@ namespace preprocess {
         if (batch == nullptr) {
             return arrow::Status::ExecutionError("No record batch found in file: " + base_path);
         }
-        df = afn::RowWiseStringDF(batch);
+        df.Initialize(batch);
         return arrow::Status::OK();
     }
 
@@ -89,7 +89,7 @@ namespace preprocess {
 
         for (const auto& file_name : file_names) {
             const auto path = std::filesystem::path(file_name);
-            const std::string query = std::format("CREATE TABLE {} AS SELECT FROM '{}';", path.filename().string(), file_name);
+            const std::string query = std::format("CREATE TABLE {} AS SELECT * FROM '{}' LIMIT 10;", path.stem().string(), file_name);
             const auto status = conn.ExecuteQueryNoReturn(query);
             if (!status.ok()) {
                 return arrow::Status::IOError("Failed to execute query: " + status.ToString());
@@ -119,7 +119,7 @@ namespace preprocess {
             return arrow::Status::ExecutionError("Failed to execute query: " + result.ToString());
         }
 
-        df = afn::RowWiseStringDF(table);
+        df.Initialize(table);
         return arrow::Status::OK();
     }
 
@@ -148,7 +148,7 @@ namespace preprocess {
             return arrow::Status::ExecutionError("Failed to execute query: " + result.ToString());
         }
 
-        df = afn::RowWiseStringDF(table);
+        df.Initialize(table);
         return arrow::Status::OK();
     }
 
@@ -159,7 +159,7 @@ namespace preprocess {
         if (!status.ok()) {
             return arrow::Status::IOError("Failed to execute query: " + status.ToString());
         }
-        df = afn::RowWiseStringDF(table);
+        df.Initialize(table);
         return arrow::Status::OK();
     }
 }
