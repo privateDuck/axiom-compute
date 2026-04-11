@@ -115,7 +115,7 @@ namespace db {
     public:
 
         DuckDBConnection() : adbc_database(nullptr), adbc_connection(nullptr) {
-            AdbcError adbc_error;
+            AdbcError adbc_error = ADBC_ERROR_INIT;
             if (AdbcDatabaseNew(&adbc_database, &adbc_error) != ADBC_STATUS_OK) {
                 throw std::runtime_error("Failed to create ADBC database: " + std::string(adbc_error.message));
             }
@@ -143,16 +143,16 @@ namespace db {
 
             if (AdbcStatementNew(&adbc_connection, &adbc_statement, &adbc_error) != ADBC_STATUS_OK) {
                 AdbcStatementRelease(&adbc_statement, &adbc_error);
-                return arrow::Status::ExecutionError();
+                return arrow::Status::ExecutionError("Failed to create ADBC statement: " + std::string(adbc_error.message));
             }
             if (AdbcStatementSetSqlQuery(&adbc_statement, query.c_str(), &adbc_error) != ADBC_STATUS_OK) {
                 AdbcStatementRelease(&adbc_statement, &adbc_error);
-                return arrow::Status::ExecutionError();
+                return arrow::Status::ExecutionError("Failed to set SQL query: " + std::string(adbc_error.message));
             }
             int64_t rows_affected;
             if(AdbcStatementExecuteQuery(&adbc_statement, &arrow_stream, &rows_affected, &adbc_error) != ADBC_STATUS_OK) {
                 AdbcStatementRelease(&adbc_statement, &adbc_error);
-                return arrow::Status::ExecutionError();
+                return arrow::Status::ExecutionError("Failed to execute query: " + std::string(adbc_error.message));
             }
             AdbcStatementRelease(&adbc_statement, &adbc_error);
 
@@ -169,16 +169,16 @@ namespace db {
 
             auto status = AdbcStatementNew(&adbc_connection, &adbc_statement, &adbc_error);
             if (status != ADBC_STATUS_OK) {
-                return arrow::Status::ExecutionError();
+                return arrow::Status::ExecutionError("Failed to create ADBC statement: " + std::string(adbc_error.message));
             }
             status = AdbcStatementSetSqlQuery(&adbc_statement, query.c_str(), &adbc_error);
             if (status != ADBC_STATUS_OK) {
-                return arrow::Status::ExecutionError();
+                return arrow::Status::ExecutionError("Failed to set SQL query: " + std::string(adbc_error.message));
             }
             int64_t rows_affected;
             status = AdbcStatementExecuteQuery(&adbc_statement, &arrow_stream, &rows_affected, &adbc_error);
             if(status != ADBC_STATUS_OK) {
-                return arrow::Status::ExecutionError();
+                return arrow::Status::ExecutionError("Failed to execute query: " + std::string(adbc_error.message));
             }
 
             arrow_stream.release(&arrow_stream);
@@ -187,7 +187,7 @@ namespace db {
         }
 
         ~DuckDBConnection() {
-            AdbcError adbc_error;
+            AdbcError adbc_error = ADBC_ERROR_INIT;
             AdbcConnectionRelease(&adbc_connection, &adbc_error);
             AdbcDatabaseRelease(&adbc_database, &adbc_error);
         }
