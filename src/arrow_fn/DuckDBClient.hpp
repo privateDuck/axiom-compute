@@ -49,7 +49,7 @@ namespace db {
             }
 
             // 2. Extract the ArrowSchema C struct
-            duckdb_arrow_schema duckdb_schema_ptr;
+            duckdb_arrow_schema duckdb_schema_ptr {};
             const auto schema_state = duckdb_query_arrow_schema(arrow_result, &duckdb_schema_ptr);
             struct ArrowSchema* c_schema = (struct ArrowSchema*)duckdb_schema_ptr;
 

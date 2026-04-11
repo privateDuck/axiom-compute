@@ -20,8 +20,8 @@ namespace cp = arrow::compute;
 namespace afn {
 
     arrow::Result<std::shared_ptr<arrow::Table>> ScanEagerDirectory(
-        const std::shared_ptr<fs::FileSystem>& filesystem,
-        const std::shared_ptr<ds::FileFormat>& format, const std::string& base_dir, const int64_t batch_size) {
+        const std::shared_ptr<fs::FileSystem> &filesystem,
+        const std::shared_ptr<ds::FileFormat> &format, const std::string &base_dir) {
 
         fs::FileSelector selector;
         selector.base_dir = base_dir;
@@ -32,14 +32,15 @@ namespace afn {
 
         // Read the entire dataset as a Table
         ARROW_ASSIGN_OR_RAISE(const auto scan_builder, dataset->NewScan());
-        ARROW_RETURN_NOT_OK(scan_builder->BatchSize(batch_size));
         ARROW_ASSIGN_OR_RAISE(const auto scanner, scan_builder->Finish());
         return scanner->ToTable();
     }
 
     arrow::Result<std::shared_ptr<arrow::RecordBatchReader>> ScanLazyDirectory(
-        const std::shared_ptr<fs::FileSystem>& filesystem,
-        const std::shared_ptr<ds::FileFormat>& format, const std::string& base_dir) {
+            const std::shared_ptr<arrow::fs::FileSystem>& filesystem,
+            const std::shared_ptr<arrow::dataset::FileFormat>& format,
+            const std::string& base_dir, int64_t batch_size = -1
+        ) {
 
         fs::FileSelector selector;
         selector.base_dir = base_dir;
@@ -49,14 +50,16 @@ namespace afn {
         ARROW_ASSIGN_OR_RAISE(const auto dataset, factory->Finish());
 
         ARROW_ASSIGN_OR_RAISE(const auto scan_builder, dataset->NewScan());
+        if (batch_size != -1)
+            ARROW_RETURN_NOT_OK(scan_builder->BatchSize(batch_size));
         ARROW_ASSIGN_OR_RAISE(const auto scanner, scan_builder->Finish());
         return scanner->ToRecordBatchReader();
     }
 
     arrow::Result<std::shared_ptr<arrow::Table>> ReadEagerFile(
-        const std::shared_ptr<fs::FileSystem>& filesystem,
-        const std::shared_ptr<ds::FileFormat>& format,
-        const std::string& file_path, const int64_t batch_size) {
+        const std::shared_ptr<fs::FileSystem> &filesystem,
+        const std::shared_ptr<ds::FileFormat> &format,
+        const std::string &file_path) {
         const auto options = ds::FileSystemFactoryOptions();
 
         ARROW_ASSIGN_OR_RAISE(const auto factory, ds::FileSystemDatasetFactory::Make(
@@ -64,8 +67,6 @@ namespace afn {
 
         ARROW_ASSIGN_OR_RAISE(const auto dataset, factory->Finish());
         ARROW_ASSIGN_OR_RAISE(const auto scan_builder, dataset->NewScan());
-        if (batch_size != -1)
-            ARROW_RETURN_NOT_OK(scan_builder->BatchSize(batch_size));
         ARROW_ASSIGN_OR_RAISE(const auto scanner, scan_builder->Finish());
 
         return scanner->ToTable();
@@ -104,13 +105,15 @@ namespace afn {
 
     arrow::Result<std::shared_ptr<arrow::RecordBatchReader>> ReadLazyFileURI(
         const std::shared_ptr<ds::FileFormat> &format,
-        const std::string &uri) {
+        const std::string &uri, const int64_t batch_size ) {
 
         const auto options = ds::FileSystemFactoryOptions();
         ARROW_ASSIGN_OR_RAISE(const auto factory, ds::FileSystemDatasetFactory::Make(uri, format, options));
         ARROW_ASSIGN_OR_RAISE(const auto dataset, factory->Finish());
 
         ARROW_ASSIGN_OR_RAISE(const auto scan_builder, dataset->NewScan());
+        if (batch_size != -1)
+            ARROW_RETURN_NOT_OK(scan_builder->BatchSize(batch_size));
         ARROW_ASSIGN_OR_RAISE(const auto scanner, scan_builder->Finish());
         return scanner->ToRecordBatchReader();
     }
@@ -186,28 +189,4 @@ namespace afn {
         return fs::AzureFileSystem::Make(options);
     }
     */
-
-    void fn() {
-        std::shared_ptr<arrow::RecordBatch> batch;
-
-        while (true) {
-            // ReadNext populates 'batch' and returns an arrow::Status
-            arrow::Status status = reader->ReadNext(&batch);
-
-            if (!status.ok()) {
-                std::cerr << "Error reading batch: " << status.ToString() << std::endl;
-                break;
-            }
-
-            // A nullptr means we have reached the end of the data stream
-            if (batch == nullptr) {
-                break;
-            }
-
-            std::cout << "Read a batch with " << batch->num_rows() << " rows." << std::endl;
-
-            const auto arr = batch->column(0);
-        }
-    }
-
 }
