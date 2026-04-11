@@ -1,10 +1,8 @@
 #include <../arrow_fn/DuckDBClient.hpp>
 #include <iostream>
-#include <arrow/c/bridge.h>
 #include <arrow/api.h>
 #include <arrow/compute/api.h>
-#include <arrow/dataset/api.h>
-#include <duckdb/duckdb.h>
+#include "source_validation.hpp"
 
 arrow::Status adbc_duck() {
 
@@ -39,6 +37,14 @@ arrow::Status adbc_duck() {
     }*/
 
     ARROW_RETURN_NOT_OK(arrow::compute::Initialize());
+
+    afn::RowWiseStringDF df;
+    bool success = preprocess::validate_file_join({R"(E:\C_Libs\duckdb\iris.parquet)", R"(E:\C_Libs\duckdb\titanic.parquet)"}, df).ok();
+    if (!success) {
+        std::cerr << "Error when creating table." << std::endl;
+    }
+
+    std::cout << df.to_string() << std::endl;
 
     return arrow::Status::OK();
 }

@@ -28,6 +28,7 @@ endif()
 ]]
 add_subdirectory(src/scripting/fluxpp)
 add_subdirectory(src/exec/ExprEngine)
+add_subdirectory(src/arrow_fn)
 add_subdirectory(src/preprocess)
 
 add_library(FinalAtlas STATIC
