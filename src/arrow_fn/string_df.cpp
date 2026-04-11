@@ -164,8 +164,8 @@ namespace afn {
             data_[index] = MakeStringCell(field->name());
             ++index;
         }
-        for (size_t c = 0; c < cols; ++c) {
-            for (size_t r = 0; r < rows; ++r) {
+        for (size_t r = 0; r < rows; ++r) {
+            for (size_t c = 0; c < cols; ++c) {
                 data_[index] = temp[c * rows + r];
                 ++index;
             }

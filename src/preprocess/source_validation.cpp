@@ -2,6 +2,7 @@
 #include "../arrow_fn/read_dataset.hpp"
 #include "../arrow_fn/string_df.hpp"
 #include <filesystem>
+#include <format>
 #include <arrow/dataset/api.h>
 #include <arrow/filesystem/localfs.h>
 #include "../arrow_fn/DuckDBClient.hpp"
@@ -83,6 +84,45 @@ namespace preprocess {
         return arrow::Status::OK();
     }
 
+    arrow::Status validate_file_join(const std::vector<std::string>& file_names, afn::RowWiseStringDF& df) {
+        db::DuckDBConnection conn;
+
+        for (const auto& file_name : file_names) {
+            const auto path = std::filesystem::path(file_name);
+            const std::string query = std::format("CREATE TABLE {} AS SELECT FROM '{}';", path.filename().string(), file_name);
+            const auto status = conn.ExecuteQueryNoReturn(query);
+            if (!status.ok()) {
+                return arrow::Status::IOError("Failed to execute query: " + status.ToString());
+            }
+        }
+
+        std::shared_ptr<arrow::Table> table;
+        const auto result = conn.ExecuteQuery(
+            R"(SELECT * EXCLUDE (row_id)
+                    FROM (
+                        PIVOT (
+                            SELECT
+                                table_name,
+                                column_name || ' (' || data_type || ')' AS col_info,
+                                row_number() OVER (PARTITION BY table_name ORDER BY column_index) AS row_id
+                            FROM duckdb_columns()
+                            WHERE internal = false
+                              AND schema_name = 'main'
+                        )
+                        ON table_name
+                        USING FIRST(col_info)
+                    )
+                    ORDER BY row_id;)",
+            table);
+
+        if (!result.ok()) {
+            return arrow::Status::ExecutionError("Failed to execute query: " + result.ToString());
+        }
+
+        df = afn::RowWiseStringDF(table);
+        return arrow::Status::OK();
+    }
+
     arrow::Status validate_db_query(const std::string& connection_str, afn::RowWiseStringDF& df) {
         db::DuckDBConnection conn;
         std::shared_ptr<arrow::Table> table;
@@ -112,7 +152,14 @@ namespace preprocess {
         return arrow::Status::OK();
     }
 
-    bool Validate(SourceType src, const std::vector<std::string> &args) {
-
+    arrow::Status Validate_remote_uri(const std::string& uri, afn::RowWiseStringDF& df) {
+        db::DuckDBConnection conn;
+        std::shared_ptr<arrow::Table> table;
+        const auto status = conn.ExecuteQuery(std::format("SELECT * FROM '{}' LIMIT 25;", uri), table);
+        if (!status.ok()) {
+            return arrow::Status::IOError("Failed to execute query: " + status.ToString());
+        }
+        df = afn::RowWiseStringDF(table);
+        return arrow::Status::OK();
     }
 }
