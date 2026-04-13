@@ -39,7 +39,8 @@ arrow::Status adbc_duck() {
     ARROW_RETURN_NOT_OK(arrow::compute::Initialize());
 
     afn::RowWiseStringDF df;
-    bool success = preprocess::validate_file_join({R"(E:\C_Libs\duckdb\iris.parquet)", R"(E:\C_Libs\duckdb\titanic.parquet)"}, df).ok();
+    //bool success = preprocess::validate_file_join({R"(E:\C_Libs\duckdb\iris.parquet)", R"(E:\C_Libs\duckdb\titanic.parquet)"}, df).ok();
+    bool success = preprocess::Validate_remote_uri("https://raw.githubusercontent.com/MainakRepositor/Datasets/refs/heads/master/F1/races.csv", df).ok();
     if (!success) {
         std::cerr << "Error when creating table." << std::endl;
     }

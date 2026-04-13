@@ -14,7 +14,7 @@ namespace preprocess {
     };
 
     arrow::Status validate_local(const std::string& path, afn::RowWiseStringDF& df);
-    arrow::Status validate_directory(const std::string& base_path, const char file_type, afn::RowWiseStringDF& df);
+    arrow::Status validate_directory(const std::string& base_path, char file_type, afn::RowWiseStringDF& df);
     arrow::Status validate_file_join(const std::vector<std::string>& file_names, afn::RowWiseStringDF& df);
     arrow::Status validate_db_query(const std::string& connection_str, afn::RowWiseStringDF& df);
     arrow::Status Validate_remote_uri(const std::string& uri, afn::RowWiseStringDF& df);

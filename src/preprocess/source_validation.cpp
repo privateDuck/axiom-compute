@@ -145,7 +145,7 @@ namespace preprocess {
             table);
 
         if (!result.ok()) {
-            return arrow::Status::ExecutionError("Failed to execute query: " + result.ToString());
+            return arrow::Status::ExecutionError(result.ToString());
         }
 
         df.Initialize(table);
