@@ -13,22 +13,6 @@ namespace afn {
         int32_t length;
     };
 
-    struct StringColumn {
-        std::string name;
-        std::vector<StringCell> data;
-        StringColumn(const std::string &name, std::vector<StringCell>&& data) : name(name), data(std::move(data)) {}
-    };
-
-    class StringDF {
-    public:
-        StringDF() = default;
-        void AddColumnFromArrowArray(const std::shared_ptr<arrow::Array> &array, const std::string& name);
-        static StringDF FromArrowTable(const std::shared_ptr<arrow::Table> &table);
-    private:
-        std::unordered_map<std::string, uint32_t> col_idx;
-        std::vector<StringColumn> columns;
-    };
-
     class RowWiseStringDF {
     public:
         RowWiseStringDF() : rows(0), cols(0) {}
