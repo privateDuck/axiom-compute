@@ -119,7 +119,7 @@ namespace db {
             if (AdbcDatabaseNew(&adbc_database, &adbc_error) != ADBC_STATUS_OK) {
                 throw std::runtime_error("Failed to create ADBC database: " + std::string(adbc_error.message));
             }
-            if (AdbcDatabaseSetOption(&adbc_database, "driver", R"(E:\axiom\atlas\lib\duckdb.dll)", &adbc_error) != ADBC_STATUS_OK) {
+            if (AdbcDatabaseSetOption(&adbc_database, "driver", R"(duckdb.dll)", &adbc_error) != ADBC_STATUS_OK) {
                 throw std::runtime_error("Failed to set driver option: " + std::string(adbc_error.message));
             }
             if (AdbcDatabaseSetOption(&adbc_database, "entrypoint", "duckdb_adbc_init", &adbc_error) != ADBC_STATUS_OK) {

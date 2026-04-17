@@ -1,6 +1,5 @@
 
 find_package(antlr4-runtime CONFIG REQUIRED)
-set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
 
 # 1. THE ACTUAL MODULE: Build the parser as an Object Library or Static Library
 # (An OBJECT library just compiles the .cpp files without linking them yet, 
@@ -15,14 +14,13 @@ add_library(fluxpp OBJECT
     functions.cpp
     diagnose/diagnostic_impl.cpp
 )
-target_link_libraries(fluxpp PRIVATE CoreHeaders antlr4_static absl::flat_hash_map)
-target_compile_definitions(fluxpp PRIVATE ANTLR4CPP_STATIC)
+target_link_libraries(fluxpp PRIVATE CoreHeaders antlr4_shared absl::flat_hash_map)
 
 # 2. THE LOCAL TEST: Create an executable just for testing this module
 add_executable(TestParser main_test.cpp)
 
 # Link the test executable to our newly created module library
-target_link_libraries(TestParser PRIVATE fluxpp antlr4_static CoreHeaders absl::flat_hash_map)
+target_link_libraries(TestParser PRIVATE fluxpp antlr4_shared CoreHeaders absl::flat_hash_map)
 
 
 

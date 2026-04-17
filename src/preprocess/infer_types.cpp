@@ -131,7 +131,7 @@ namespace preprocess {
         confidences[TREAL] = {TREAL, 0.0f, false};
         confidences[TINT] = {TINT, 0.0f, false};
         confidences[TBOOL] = {TBOOL, 0.0f, false};
-        confidences[TSTRING] = {TSTRING, 1.0f, true};
+        confidences[TSTRING] = {TSTRING, 0.0f, true};
         confidences[TTIMESTAMP] = {TTIMESTAMP, 0.0f, false};
 
         const arrow::compute::CountOptions opt = arrow::compute::CountOptions(arrow::compute::CountOptions::ONLY_VALID);
@@ -139,7 +139,7 @@ namespace preprocess {
         const auto valid_result = arrow::compute::CallFunction("count", { array }, &opt);
 
         if (!dist_result.ok() || !valid_result.ok()) {
-            return ColumnTypeInference(TSTRING, 1.0f);
+            return ColumnTypeInference("Invalid Data");
         }
 
         const auto count_distinct = dist_result->scalar_as<arrow::UInt64Scalar>().value;
@@ -154,19 +154,20 @@ namespace preprocess {
                 res.AddAlternative(TSTRING, 0.9f);
             }
             else if (distinct_percent < 0.5f){
-                res.AddAlternative(TSTRING, 0.9f * std::exp(-0.03f * static_cast<double>(count_distinct - 10)));
+                res.AddAlternative(TSTRING, 0.9f * std::exp(-0.03f * static_cast<float>(count_distinct - 10)));
             }
         };
 
         if (count_distinct <= 1) {
-            return ColumnTypeInference(TSTRING, 0.0f); // This column is useless.
+            // Column contains a singular value. Will be automatically removed in the next step
+            return ColumnTypeInference("Singular Column");
         }
 
         switch (array->type_id()) {
             case arrow::Type::NA:
                 break;
             case arrow::Type::BOOL: {
-                auto res = ColumnTypeInference(TBOOL, 1.0f);
+                auto res = ColumnTypeInference(TBOOL, TBOOL, 1.0f);
                 res.AddAlternative(TINT, 1.0f);
                 res.AddAlternative(TREAL, 1.0f);
                 return res;
@@ -179,7 +180,7 @@ namespace preprocess {
             case arrow::Type::INT32:
             case arrow::Type::UINT64:
             case arrow::Type::INT64: {
-                auto res = ColumnTypeInference(TINT, 1.0f);
+                auto res = ColumnTypeInference(TINT, TINT, 1.0f);
                 res.AddAlternative(TREAL, 1.0f);
                 add_categorical_conf(res);
                 return res;
@@ -191,7 +192,7 @@ namespace preprocess {
             case arrow::Type::DECIMAL32:
             case arrow::Type::DECIMAL64:
             case arrow::Type::DOUBLE:{
-                auto res = ColumnTypeInference(TREAL, 1.0f);
+                auto res = ColumnTypeInference(TREAL, TREAL, 1.0f);
                 add_categorical_conf(res);
                 return res;
             }
@@ -208,7 +209,7 @@ namespace preprocess {
             case arrow::Type::TIMESTAMP:
             case arrow::Type::TIME32:
             case arrow::Type::TIME64: {
-                auto res = ColumnTypeInference(TTIMESTAMP, 1.0f);
+                auto res = ColumnTypeInference(TTIMESTAMP, TTIMESTAMP, 1.0f);
                 add_categorical_conf(res);
                 return res;
             }
@@ -216,7 +217,7 @@ namespace preprocess {
             case arrow::Type::INTERVAL_DAY_TIME:
             case arrow::Type::DURATION:
             case arrow::Type::INTERVAL_MONTH_DAY_NANO: {
-                auto res = ColumnTypeInference(TREAL, 1.0f);
+                auto res = ColumnTypeInference(TREAL, TREAL, 1.0f);
                 add_categorical_conf(res);
                 return res;
             }
@@ -235,68 +236,86 @@ namespace preprocess {
             case arrow::Type::LARGE_BINARY:
             case arrow::Type::LARGE_STRING: {
                 // Not supported
-                return ColumnTypeInference(TSTRING, 0.0f);
+                return ColumnTypeInference("Unsupported Data Types");
             }
             case arrow::Type::MAX_ID:
             default: {
                 // Error
-                return ColumnTypeInference(TSTRING, 0.0f);
+                return ColumnTypeInference("Unknown Data Type");
             }
         }
 
         confidences[TBOOL] = try_parse_bool(array);
         if (confidences[TBOOL].full_match) {
-            const auto res = ColumnTypeInference(TBOOL, 1.0f);
+            auto res = ColumnTypeInference(TSTRING, TBOOL, 1.0f);
+            add_categorical_conf(res);
             return res;
         }
         confidences[TTIMESTAMP] = try_parse_timestamp(array);
         if (confidences[TTIMESTAMP].full_match) {
-            return ColumnTypeInference(TTIMESTAMP, 1.0f);
+            auto res = ColumnTypeInference(TSTRING, TTIMESTAMP, 1.0f);
+            add_categorical_conf(res);
+            return res;
         }
         confidences[TINT] = try_parse_int(array);
         if (confidences[TINT].full_match) {
-            auto res = ColumnTypeInference(TINT, 1.0f);
+            auto res = ColumnTypeInference(TSTRING, TINT, 1.0f);
             res.AddAlternative(TREAL, 1.0f);
+            add_categorical_conf(res);
             return res; // This can also be parsed as float. But we're giving the user the choice
         }
         confidences[TREAL] = try_parse_real(array);
         if (confidences[TREAL].success_rate >= confidences[TINT].success_rate || confidences[TREAL].full_match) {
-            return ColumnTypeInference(TREAL, 1.0f);
+            auto res = ColumnTypeInference(TSTRING, TREAL, 1.0f);
+            add_categorical_conf(res);
+            return res;
         }
 
         std::ranges::sort(confidences, [](const InferParseResult& a, const InferParseResult& b) {
             return a.success_rate > b.success_rate;
         });
 
-        auto res = ColumnTypeInference(confidences[0].type, confidences[0].success_rate);
-        for (int i = 1; i < confidences.size(); i++) {
+        float conf_success;
+        Type conf_type;
+        if (confidences[0].success_rate <= 0.5) {
+            // If no type gets a majority of success rate, In this case String type will dominate
+            if (count_distinct <= 5) {
+                conf_success = 1.0f;
+            }
+            else if (count_distinct <= 10) {
+                conf_success = 0.9f;
+            }
+            else if (distinct_percent < 0.5f){
+                conf_success = 0.9f * std::exp(-0.03f * static_cast<float>(count_distinct - 10));
+            }
+            else {
+                return ColumnTypeInference("Low Variance");
+            }
+            conf_type = TSTRING;
+        }
+        else {
+            conf_type = confidences[0].type;
+            conf_success = confidences[0].success_rate;
+        }
+        auto res = ColumnTypeInference(TSTRING, conf_type, conf_success);
+
+        for (int i = 1; i < confidences.size() - 1; i++) {
             if (confidences[i].success_rate > 0.1f) {
                 res.AddAlternative(confidences[i].type, confidences[i].success_rate);
             }
         }
 
-        top::ResultBuilder builder;
-        std::vector<CValue> alts (res.alternative_count);
-        for (const auto& alt : res.alternatives) {
-            CValue alt_map = builder.MakeMap({
-                {"type", builder.MakeStr(typeName(alt.type))},
-                {"confidence", builder.MakeFloat(alt.confidence)}
-                });
-            alts.push_back(alt_map);
-        }
-        CValue full_map = builder.MakeMap({
-            {"primary_type", builder.MakeStr(typeName(res.primary_type))},
-            {"primary_confidence", builder.MakeFloat(res.primary_confidence)},
-            {"alternatives", builder.MakeList(alts)}
-        });
+        if (confidences[0].success_rate > 0.5)
+            add_categorical_conf(res);
+
         return res;
     }
 
-    TypeInferenceResult infer_types_of_table(const std::shared_ptr<arrow::Table>& table) {
+    std::vector<ColumnTypeInference> infer_types_of_table(const std::shared_ptr<arrow::Table>& table) {
         std::vector<ColumnTypeInference> results;
         for (int i = 0; i < table->num_columns(); i++) {
             results.push_back(infer_type_of_array(table->column(i)->chunk(0)));
         }
-        return TypeInferenceResult(results);
+        return results;
     }
 };

@@ -12,9 +12,9 @@ namespace preprocess {
     };
 
     PreprocessorContext* make_preprocessor_context();
-    void validate_source(SourceType source, const std::string& args);
-    void import_and_infer_types(PreprocessorContext* ctx, SourceType source, const std::string& import_args);
-    void type_cast_and_null_check(PreprocessorContext* ctx, const std::string& type_infer_map);
-    void drop_nulls_and_save(PreprocessorContext* ctx, const std::string& drop_rules, const std::string& save_location);
+    afn::RowWiseStringDF validate_source(SourceType source, const std::string& args);
+    afn::RowWiseStringDF import_and_infer_types(PreprocessorContext* ctx, SourceType source, const std::string& import_args);
+    afn::RowWiseStringDF type_cast_and_null_check(PreprocessorContext* ctx, const std::string& type_infer_map);
+    afn::RowWiseStringDF drop_nulls_and_save(PreprocessorContext* ctx, const std::string& drop_rules, const std::string& save_location);
     void destroy_preprocessor_context(PreprocessorContext* ctx);
 }
