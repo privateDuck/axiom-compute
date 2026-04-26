@@ -3,6 +3,9 @@
 #include <arrow/dataset/api.h>
 #include <arrow/filesystem/localfs.h>
 #include "source_validation.hpp"
+
+#include <re2/re2.h>
+
 #include "../arrow_fn/read_dataset.hpp"
 #include "../arrow_fn/string_df.hpp"
 #include "../arrow_fn/DuckDBClient.hpp"
@@ -18,6 +21,7 @@ namespace preprocess {
             return arrow::Status::IOError("Unsupported file format: " + ext);
         }
         std::shared_ptr<arrow::dataset::FileFormat> format;
+        bool isExcel = false;
         switch (ext[1]) {
             case 'c':
                 format = std::make_shared<arrow::dataset::CsvFileFormat>();
@@ -31,20 +35,29 @@ namespace preprocess {
             case 'i':
                 format = std::make_shared<arrow::dataset::IpcFileFormat>();
                 break;
+            case 'x':
+                isExcel = true;
+                break;
             default:
                 return arrow::Status::IOError("Unsupported file format: " + ext);
         }
-        ARROW_ASSIGN_OR_RAISE(const auto fs, arrow::fs::FileSystemFromUriOrPath(path));
-        ARROW_ASSIGN_OR_RAISE(const auto reader, afn::ReadLazyFile(fs, format, path, 10));
-        std::shared_ptr<arrow::RecordBatch> batch;
-        const auto status = reader->ReadNext(&batch);
-        if (!status.ok()) {
-            return arrow::Status::IOError("Failed to read record batch: " + status.ToString());
+        if (!isExcel) {
+            ARROW_ASSIGN_OR_RAISE(const auto fs, arrow::fs::FileSystemFromUriOrPath(path));
+            ARROW_ASSIGN_OR_RAISE(const auto reader, afn::ReadLazyFile(fs, format, path, 10));
+            std::shared_ptr<arrow::RecordBatch> batch;
+            const auto status = reader->ReadNext(&batch);
+            if (!status.ok()) {
+                return arrow::Status::IOError("Failed to read record batch: " + status.ToString());
+            }
+            if (batch == nullptr) {
+                return arrow::Status::ExecutionError("No record batch found in file: " + path);
+            }
+            df.Initialize(batch, 25);
         }
-        if (batch == nullptr) {
-            return arrow::Status::ExecutionError("No record batch found in file: " + path);
+        else {
+            ARROW_ASSIGN_OR_RAISE(const auto table, afn::ReadEagerFile(path));
+            df.Initialize(table, 25);
         }
-        df.Initialize(batch);
         return arrow::Status::OK();
     }
 
@@ -125,6 +138,21 @@ namespace preprocess {
 
     arrow::Status validate_db_query(const std::string& connection_str, afn::RowWiseStringDF& df) {
         db::DuckDBConnection conn;
+        const RE2 pattern(R"(^(\w+)://(?:([^:]+)(?::([^@]+))?@)?([^:/]+)(?::(\d+))?/([^?]+)(?:\?(.*))?$)");
+        re2::StringPiece driver, user, password, host, port, database, params;
+        if (RE2::FullMatch(connection_str, pattern, &driver, &user, &password, &host, &port, &database, &params)) {
+            if (driver == "postgres") {
+                RETURN_NOT_OK(conn.LoadPostgresDriver());
+            }
+            else {
+                RETURN_NOT_OK(conn.LoadMySQLDriver());
+            }
+            RETURN_NOT_OK(conn.ExecuteQueryNoReturn(std::format("ATTACH '{}' (TYPE {}, READ_ONLY);", connection_str, driver)));
+            RETURN_NOT_OK(conn.ExecuteQueryNoReturn(std::format("USE {};", database)));
+        }
+        else {
+            return arrow::Status::IOError("Invalid Connection String: " + connection_str);
+        }
         std::shared_ptr<arrow::Table> table;
         const auto result = conn.ExecuteQuery(
             R"(SELECT * EXCLUDE (row_id)
@@ -157,7 +185,7 @@ namespace preprocess {
         std::shared_ptr<arrow::Table> table;
         const auto status = conn.ExecuteQuery(std::format("SELECT * FROM '{}' LIMIT 25;", uri), table);
         if (!status.ok()) {
-            return arrow::Status::IOError("Failed to execute query: " + status.ToString());
+            return arrow::Status::IOError("Failed to read the remote file");
         }
         df.Initialize(table);
         return arrow::Status::OK();

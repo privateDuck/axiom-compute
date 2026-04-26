@@ -126,7 +126,7 @@ namespace preprocess {
     }
 
 
-    ColumnTypeInference infer_type_of_array(const std::shared_ptr<arrow::Array>& array) {
+    ColumnTypeInference infer_type_of_array(const std::shared_ptr<arrow::Array>& array, const std::string& name) {
         Confidences confidences;
         confidences[TREAL] = {TREAL, 0.0f, false};
         confidences[TINT] = {TINT, 0.0f, false};
@@ -145,6 +145,7 @@ namespace preprocess {
         const auto count_distinct = dist_result->scalar_as<arrow::UInt64Scalar>().value;
         const auto count_valid = valid_result->scalar_as<arrow::UInt64Scalar>().value;
         const auto distinct_percent = static_cast<float>(count_distinct) / static_cast<float>(count_valid);
+        const auto count_null = array->length() - count_valid;
 
         auto add_categorical_conf = [count_distinct, distinct_percent](ColumnTypeInference& res) {
             if (count_distinct <= 5) {
@@ -167,7 +168,7 @@ namespace preprocess {
             case arrow::Type::NA:
                 break;
             case arrow::Type::BOOL: {
-                auto res = ColumnTypeInference(TBOOL, TBOOL, 1.0f);
+                auto res = ColumnTypeInference(array, name, TBOOL, TBOOL, 1.0f, count_distinct, count_null);
                 res.AddAlternative(TINT, 1.0f);
                 res.AddAlternative(TREAL, 1.0f);
                 return res;
@@ -180,7 +181,7 @@ namespace preprocess {
             case arrow::Type::INT32:
             case arrow::Type::UINT64:
             case arrow::Type::INT64: {
-                auto res = ColumnTypeInference(TINT, TINT, 1.0f);
+                auto res = ColumnTypeInference(array, name, TINT, TINT, 1.0f, count_distinct, count_null);
                 res.AddAlternative(TREAL, 1.0f);
                 add_categorical_conf(res);
                 return res;
@@ -192,7 +193,7 @@ namespace preprocess {
             case arrow::Type::DECIMAL32:
             case arrow::Type::DECIMAL64:
             case arrow::Type::DOUBLE:{
-                auto res = ColumnTypeInference(TREAL, TREAL, 1.0f);
+                auto res = ColumnTypeInference(array, name, TREAL, TREAL, 1.0f, count_distinct, count_null);
                 add_categorical_conf(res);
                 return res;
             }
@@ -209,7 +210,7 @@ namespace preprocess {
             case arrow::Type::TIMESTAMP:
             case arrow::Type::TIME32:
             case arrow::Type::TIME64: {
-                auto res = ColumnTypeInference(TTIMESTAMP, TTIMESTAMP, 1.0f);
+                auto res = ColumnTypeInference(array, name, TTIMESTAMP, TTIMESTAMP, 1.0f, count_distinct, count_null);
                 add_categorical_conf(res);
                 return res;
             }
@@ -217,7 +218,7 @@ namespace preprocess {
             case arrow::Type::INTERVAL_DAY_TIME:
             case arrow::Type::DURATION:
             case arrow::Type::INTERVAL_MONTH_DAY_NANO: {
-                auto res = ColumnTypeInference(TREAL, TREAL, 1.0f);
+                auto res = ColumnTypeInference(array, name, TREAL, TREAL, 1.0f, count_distinct, count_null);
                 add_categorical_conf(res);
                 return res;
             }
@@ -247,26 +248,26 @@ namespace preprocess {
 
         confidences[TBOOL] = try_parse_bool(array);
         if (confidences[TBOOL].full_match) {
-            auto res = ColumnTypeInference(TSTRING, TBOOL, 1.0f);
+            auto res = ColumnTypeInference(array, name, TSTRING, TBOOL, 1.0f, count_distinct, count_null);
             add_categorical_conf(res);
             return res;
         }
         confidences[TTIMESTAMP] = try_parse_timestamp(array);
         if (confidences[TTIMESTAMP].full_match) {
-            auto res = ColumnTypeInference(TSTRING, TTIMESTAMP, 1.0f);
+            auto res = ColumnTypeInference(array, name, TSTRING, TTIMESTAMP, 1.0f, count_distinct, count_null);
             add_categorical_conf(res);
             return res;
         }
         confidences[TINT] = try_parse_int(array);
         if (confidences[TINT].full_match) {
-            auto res = ColumnTypeInference(TSTRING, TINT, 1.0f);
+            auto res = ColumnTypeInference(array, name, TSTRING, TINT, 1.0f, count_distinct, count_null);
             res.AddAlternative(TREAL, 1.0f);
             add_categorical_conf(res);
             return res; // This can also be parsed as float. But we're giving the user the choice
         }
         confidences[TREAL] = try_parse_real(array);
         if (confidences[TREAL].success_rate >= confidences[TINT].success_rate || confidences[TREAL].full_match) {
-            auto res = ColumnTypeInference(TSTRING, TREAL, 1.0f);
+            auto res = ColumnTypeInference(array, name, TSTRING, TREAL, 1.0f, count_distinct, count_null);
             add_categorical_conf(res);
             return res;
         }
@@ -297,7 +298,7 @@ namespace preprocess {
             conf_type = confidences[0].type;
             conf_success = confidences[0].success_rate;
         }
-        auto res = ColumnTypeInference(TSTRING, conf_type, conf_success);
+        auto res = ColumnTypeInference(array, name, TSTRING, conf_type, conf_success, count_distinct, count_null);
 
         for (int i = 1; i < confidences.size() - 1; i++) {
             if (confidences[i].success_rate > 0.1f) {
@@ -311,11 +312,17 @@ namespace preprocess {
         return res;
     }
 
-    std::vector<ColumnTypeInference> infer_types_of_table(const std::shared_ptr<arrow::Table>& table) {
+    TypeInferenceResult infer_types_of_table(const std::shared_ptr<arrow::Table>& table) {
         std::vector<ColumnTypeInference> results;
+        std::string result_error;
+        const auto fields = table->fields();
         for (int i = 0; i < table->num_columns(); i++) {
-            results.push_back(infer_type_of_array(table->column(i)->chunk(0)));
+            const auto res = infer_type_of_array(table->column(i)->chunk(0), fields[i]->name());
+            if (!res.any_error.empty() && result_error.empty()) {
+                result_error = res.any_error;
+            }
+            results.emplace_back(res);
         }
-        return results;
+        return {results, result_error};
     }
 };

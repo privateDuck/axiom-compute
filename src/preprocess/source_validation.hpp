@@ -19,6 +19,11 @@ namespace preprocess {
     arrow::Status validate_db_query(const std::string& connection_str, afn::RowWiseStringDF& df);
     arrow::Status Validate_remote_uri(const std::string& uri, afn::RowWiseStringDF& df);
 
-    bool Validate(SourceType src, const std::vector<std::string>& args);
-
+    struct SourceValidationResult {
+        afn::RowWiseStringDF df;
+        std::string any_errors;
+        bool isError;
+        explicit SourceValidationResult(std::string any_errors) : any_errors(std::move(any_errors)), isError(true) {}
+        explicit SourceValidationResult(afn::RowWiseStringDF df) : df(std::move(df)), isError(false) {}
+    };
 }
