@@ -166,11 +166,12 @@ namespace afn {
         builder.Finish(stringdf);
     }
 
-    void RowWiseStringDF::Initialize(const std::shared_ptr<arrow::RecordBatch>& batch) {
+    void RowWiseStringDF::Initialize(const std::shared_ptr<arrow::RecordBatch>& batch, const int64_t max_rows) {
         cols = batch->num_columns();
-        rows = batch->num_rows();
+        rows = std::min(max_rows, batch->num_rows());
+        const auto max_entries = (rows + 1) * cols;
 
-        data_.resize((rows + 1) * cols);
+        data_.resize(max_entries);
         size_t index = 0;
         size_t col_start_offset = 0;
 
@@ -196,16 +197,18 @@ namespace afn {
                     data_[index] = MakeStringCell(sv);
                 }
                 index += cols;
+                if (index >= max_entries) break;
             }
             ++col_start_offset;
         }
     }
 
-    void RowWiseStringDF::Initialize(const std::shared_ptr<arrow::Table> &table) {
+    void RowWiseStringDF::Initialize(const std::shared_ptr<arrow::Table> &table, const int64_t max_rows) {
         cols = table->num_columns();
-        rows = table->num_rows();
+        rows = std::min(max_rows, table->num_rows());
+        const auto max_entries = (rows + 1) * cols;
 
-        data_.resize((rows + 1) * cols);
+        data_.resize(max_entries);
         size_t index = 0;
         size_t col_start_offset = 0;
 
@@ -236,15 +239,16 @@ namespace afn {
                         data_[index] = MakeStringCell(sv);
                     }
                     index += cols;
+                    if (index >= max_entries) break;
                 }
             }
             ++col_start_offset;
         }
     }
 
-    void RowWiseStringDF::Initialize(const std::shared_ptr<arrow::Array> &arr, const std::string &name) {
+    void RowWiseStringDF::Initialize(const std::shared_ptr<arrow::Array> &arr, const std::string &name, const int64_t max_rows) {
         cols = 1;
-        rows = arr->length();
+        rows = std::min(max_rows, arr->length());
         data_.resize(rows + 1);
 
         auto cast_result = arrow::compute::Cast(*arr, arrow::utf8());

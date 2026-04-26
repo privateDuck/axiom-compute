@@ -1,17 +1,22 @@
 
+#include <filesystem>
 #include <iostream>
 #include <arrow/api.h>
 #include <arrow/compute/api.h>
-#include <arrow/compute/cast.h>
 #include <arrow/dataset/dataset.h>
 #include <arrow/dataset/discovery.h>
 #include <arrow/dataset/file_base.h>
+#include <arrow/dataset/file_csv.h>
+#include <arrow/dataset/file_ipc.h>
+#include <arrow/dataset/file_json.h>
 #include <arrow/dataset/file_parquet.h>
 #include <arrow/dataset/scanner.h>
 #include <arrow/filesystem/filesystem.h>
+#include <arrow/filesystem/localfs.h>
 #include <arrow/ipc/writer.h>
 #include <arrow/util/iterator.h>
-
+#include <re2/re2.h>
+#include "DuckDBClient.hpp"
 
 namespace ds = arrow::dataset;
 namespace fs = arrow::fs;
@@ -34,6 +39,21 @@ namespace afn {
         ARROW_ASSIGN_OR_RAISE(const auto scan_builder, dataset->NewScan());
         ARROW_ASSIGN_OR_RAISE(const auto scanner, scan_builder->Finish());
         return scanner->ToTable();
+    }
+
+    arrow::Result<std::shared_ptr<arrow::Table>> ScanEagerDirectory(const std::string& extension, const std::string &base_dir) {
+        switch (extension[0]) {
+            case 'c':
+                return ScanEagerDirectory(std::make_shared<fs::LocalFileSystem>(), std::make_shared<ds::CsvFileFormat>(), base_dir);
+            case 'p':
+                return ScanEagerDirectory(std::make_shared<fs::LocalFileSystem>(), std::make_shared<ds::ParquetFileFormat>(), base_dir);
+            case 'j':
+                return ScanEagerDirectory(std::make_shared<fs::LocalFileSystem>(), std::make_shared<ds::JsonFileFormat>(), base_dir);
+            case 'i':
+                return ScanEagerDirectory(std::make_shared<fs::LocalFileSystem>(), std::make_shared<ds::IpcFileFormat>(), base_dir);
+            default:
+                return arrow::Status::ExecutionError("Unsupported file format: " + extension);
+        }
     }
 
     arrow::Result<std::shared_ptr<arrow::RecordBatchReader>> ScanLazyDirectory(
@@ -90,6 +110,66 @@ namespace afn {
         return scanner->ToRecordBatchReader();
     }
 
+    arrow::Result<std::shared_ptr<arrow::Table>> ReadEagerFile(const std::string& path) {
+        const std::filesystem::path path_obj(path);
+        const char ext = path_obj.extension().string()[1];
+        std::shared_ptr<arrow::dataset::FileFormat> format;
+        bool isExcel = false;
+        switch (ext) {
+            case 'p': // Parquet
+                format = std::make_shared<arrow::dataset::ParquetFileFormat>();
+                break;
+            case 'c': // csv
+                format = std::make_shared<arrow::dataset::CsvFileFormat>();
+                break;
+            case 'j': // json
+                format = std::make_shared<arrow::dataset::JsonFileFormat>();
+                break;
+            case 'i': // ipc
+                format = std::make_shared<arrow::dataset::IpcFileFormat>();
+                break;
+            case 'x': // xlsx
+                isExcel = true;
+                break;
+            default:
+                return arrow::Status::ExecutionError("Invalid File Extension");
+        }
+        if (!isExcel) {
+            ARROW_ASSIGN_OR_RAISE(const auto fs, arrow::fs::FileSystemFromUriOrPath(path));
+            return ReadEagerFile(fs, format, path);
+        }
+
+        db::DuckDBConnection conn;
+        std::shared_ptr<arrow::Table> table;
+        RETURN_NOT_OK(conn.ExecuteQuery(std::format("SELECT * FROM '{}';", path), table));
+        return table;
+    }
+
+    arrow::Result<std::shared_ptr<arrow::RecordBatchReader>> ReadLazyFile(const std::string& path, const int64_t batch_size) {
+        const std::filesystem::path path_obj(path);
+        const char ext = path_obj.extension().string()[1];
+        std::shared_ptr<arrow::dataset::FileFormat> format;
+        switch (ext) {
+            case 'p': // Parquet
+                format = std::make_shared<arrow::dataset::ParquetFileFormat>();
+                break;
+            case 'c': // csv
+                format = std::make_shared<arrow::dataset::CsvFileFormat>();
+                break;
+            case 'j': // json
+                format = std::make_shared<arrow::dataset::JsonFileFormat>();
+                break;
+            case 'i': // ipc
+                format = std::make_shared<arrow::dataset::IpcFileFormat>();
+                break;
+            case 'x': // xlsx
+            default:
+                return arrow::Status::ExecutionError("Cannot read excel files as a record batch");
+        }
+        ARROW_ASSIGN_OR_RAISE(const auto fs, arrow::fs::FileSystemFromUriOrPath(path));
+        return ReadLazyFile(fs, format, path, batch_size);
+    }
+
     arrow::Result<std::shared_ptr<arrow::Table>> ReadEagerFileURI(
         const std::shared_ptr<ds::FileFormat>& format,
         const std::string& uri) {
@@ -101,6 +181,13 @@ namespace afn {
         ARROW_ASSIGN_OR_RAISE(const auto scan_builder, dataset->NewScan());
         ARROW_ASSIGN_OR_RAISE(const auto scanner, scan_builder->Finish());
         return scanner->ToTable();
+    }
+
+    arrow::Result<std::shared_ptr<arrow::Table>> ReadEagerFileURI(const std::string& uri) {
+        db::DuckDBConnection conn;
+        std::shared_ptr<arrow::Table> table;
+        RETURN_NOT_OK(conn.ExecuteQuery(std::format("SELECT * FROM '{}';", uri), table));
+        return table;
     }
 
     arrow::Result<std::shared_ptr<arrow::RecordBatchReader>> ReadLazyFileURI(
@@ -118,32 +205,42 @@ namespace afn {
         return scanner->ToRecordBatchReader();
     }
 
-    arrow::Status ReadCloudDataset(const std::string& uri) {
-        // 1. Automatically resolve the Filesystem (S3, GCS, Azure) from the URI
-        std::string path;
-        std::shared_ptr<arrow::fs::FileSystem> fs;
+    arrow::Result<std::shared_ptr<arrow::Table>> ReadDatabaseConnection(
+        const std::string& connection_string, const std::string& query
+    ) {
+        // 1. We have to first parse the query to extract the
+        // let's assume the connection string is in the format: "driver://user:password@host:port/database?parameters"
+        const RE2 pattern(R"(^(\w+)://(?:([^:]+)(?::([^@]+))?@)?([^:/]+)(?::(\d+))?/([^?]+)(?:\?(.*))?$)");
+        re2::StringPiece driver, user, password, host, port, database, params;
+        if (RE2::FullMatch(connection_string, pattern, &driver, &user, &password, &host, &port, &database, &params)) {
+            db::DuckDBConnection conn;
+            if (driver == "postgres") {
+                RETURN_NOT_OK(conn.LoadPostgresDriver());
+            }
+            else {
+                RETURN_NOT_OK(conn.LoadMySQLDriver());
+            }
+            RETURN_NOT_OK(conn.ExecuteQueryNoReturn(std::format("ATTACH '{}' (TYPE {}, READ_ONLY);", connection_string, driver)));
+            RETURN_NOT_OK(conn.ExecuteQueryNoReturn(std::format("USE {};", database)));
 
-        // ARROW_ASSIGN_OR_RAISE unpacks the Result or returns the Status on error
-        ARROW_ASSIGN_OR_RAISE(fs, arrow::fs::FileSystemFromUri(uri, &path));
+            std::shared_ptr<arrow::Table> table;
+            RETURN_NOT_OK(conn.ExecuteQuery(query, table));
 
-        // 2. Specify the file format (assuming Parquet here)
-        auto format = std::make_shared<arrow::dataset::ParquetFileFormat>();
+            return table;
+        }
+        return arrow::Status::ExecutionError("Invalid connection string format");
+    }
 
-        // 3. Create the Dataset Factory
-        arrow::dataset::FileSystemFactoryOptions options;
-        ARROW_ASSIGN_OR_RAISE(auto factory,
-            arrow::dataset::FileSystemDatasetFactory::Make(fs, {path}, format, options));
-
-        // 4. Finish the dataset creation
-        ARROW_ASSIGN_OR_RAISE(auto dataset, factory->Finish());
-
-        // 5. Scan the dataset into memory (Arrow Table)
-        ARROW_ASSIGN_OR_RAISE(auto scanner_builder, dataset->NewScan());
-        ARROW_ASSIGN_OR_RAISE(auto scanner, scanner_builder->Finish());
-        ARROW_ASSIGN_OR_RAISE(auto table, scanner->ToTable());
-
-        std::cout << "Successfully read " << table->num_rows() << " rows from " << uri << std::endl;
-        return arrow::Status::OK();
+    arrow::Result<std::shared_ptr<arrow::Table>> ReadJoinedFileSet(
+        const std::vector<std::string>& files, const std::string& query
+    ) {
+        db::DuckDBConnection conn;
+        for (const auto& filename : files) {
+            RETURN_NOT_OK(conn.ReadFileAsTable(filename, std::filesystem::path(filename).stem().string()));
+        }
+        std::shared_ptr<arrow::Table> table;
+        RETURN_NOT_OK(conn.ExecuteQuery(query, table));
+        return table;
     }
     /*
     #include <arrow/filesystem/s3fs.h>

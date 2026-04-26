@@ -16,13 +16,13 @@ namespace afn {
     class RowWiseStringDF {
     public:
         RowWiseStringDF() : rows(0), cols(0) {}
-        void Initialize(const std::shared_ptr<arrow::RecordBatch>& batch);
-        void Initialize(const std::shared_ptr<arrow::Table>& table);
-        void Initialize(const std::shared_ptr<arrow::Array>& arr, const std::string& name = "Column Data");
+        void Initialize(const std::shared_ptr<arrow::RecordBatch>& batch, int64_t max_rows = std::numeric_limits<int64_t>::max());
+        void Initialize(const std::shared_ptr<arrow::Table>& table, int64_t max_rows = std::numeric_limits<int64_t>::max());
+        void Initialize(const std::shared_ptr<arrow::Array>& arr, const std::string& name = "Column Data", int64_t max_rows = std::numeric_limits<int64_t>::max());
         [[nodiscard]] std::string to_string() const;
     private:
         std::vector<StringCell> data_;
-        int32_t rows;
+        int64_t rows;
         int32_t cols;
     };
 }

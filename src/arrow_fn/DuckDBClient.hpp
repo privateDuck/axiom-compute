@@ -5,6 +5,7 @@
 #include <arrow/c/bridge.h>
 #include <arrow/api.h>
 #include <adbc.h>
+#include <format>
 
 
 namespace db {
@@ -134,6 +135,18 @@ namespace db {
             if (AdbcConnectionInit(&adbc_connection, &adbc_database, &adbc_error) != ADBC_STATUS_OK) {
                 throw std::runtime_error("Failed to initialize ADBC connection: " + std::string(adbc_error.message));
             }
+        }
+
+        arrow::Status LoadPostgresDriver() {
+            return ExecuteQueryNoReturn(R"(LOAD 'postgres_driver.duckdb_extension;')");
+        }
+
+        arrow::Status LoadMySQLDriver() {
+            return ExecuteQueryNoReturn(R"(LOAD 'mysql_driver.duckdb_extension;')");
+        }
+
+        arrow::Status ReadFileAsTable(const std::string& filename, const std::string& table_name) {
+            return ExecuteQueryNoReturn(std::format("CREATE TABLE {} AS SELECT * FROM '{}'", table_name, filename));
         }
 
         arrow::Status ExecuteQuery(const std::string& query, std::shared_ptr<arrow::Table>& table) {
